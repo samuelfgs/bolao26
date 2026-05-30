@@ -149,60 +149,60 @@ export function MatchCard({ match, currentGuess, onGuessChange }: MatchCardProps
         </div>
         
         {/* Score Inputs with Adjusters */}
-        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-4 shrink-0">
           {/* Home Score */}
-          <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-xl border border-gray-100">
+          <div className="flex flex-col items-center gap-0.5">
             <button 
               type="button"
               disabled={isLocked}
-              onClick={() => handleAdjust("home", -1)}
-              className="w-6 h-8 flex items-center justify-center bg-white text-gray-400 rounded-lg hover:text-stadium-green-800 disabled:opacity-0 transition-all font-black text-xs border border-gray-100 shadow-xs"
+              onClick={() => handleAdjust("home", 1)}
+              className="w-10 h-6 flex items-center justify-center bg-gray-50 text-gray-400 rounded-t-lg hover:bg-stadium-green-100 hover:text-stadium-green-800 disabled:opacity-0 transition-all font-black text-xs border border-b-0 border-gray-100 shadow-xs"
             >
-              -
+              ▲
             </button>
             <input
               type="number"
               disabled={isLocked}
-              className="w-8 h-8 bg-transparent text-center text-lg font-black text-stadium-green-800 focus:outline-hidden disabled:text-gray-400 transition-all placeholder:text-gray-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              className="w-10 h-10 border-x-2 border-gray-100 bg-white text-center text-xl font-black text-stadium-green-800 focus:outline-hidden disabled:bg-gray-50 disabled:text-gray-400 transition-all placeholder:text-gray-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               value={currentGuess.home}
               onChange={(e) => onGuessChange(e.target.value, currentGuess.away.toString())}
             />
             <button 
               type="button"
               disabled={isLocked}
-              onClick={() => handleAdjust("home", 1)}
-              className="w-6 h-8 flex items-center justify-center bg-white text-gray-400 rounded-lg hover:text-stadium-green-800 disabled:opacity-0 transition-all font-black text-xs border border-gray-100 shadow-xs"
+              onClick={() => handleAdjust("home", -1)}
+              className="w-10 h-6 flex items-center justify-center bg-gray-50 text-gray-400 rounded-b-lg hover:bg-stadium-green-100 hover:text-stadium-green-800 disabled:opacity-0 transition-all font-black text-xs border border-t-0 border-gray-100 shadow-xs"
             >
-              +
+              ▼
             </button>
           </div>
 
-          <span className="text-gray-300 font-black text-[10px] italic">X</span>
+          <span className="text-gray-300 font-black text-[10px] sm:text-xs italic">X</span>
 
           {/* Away Score */}
-          <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-xl border border-gray-100">
+          <div className="flex flex-col items-center gap-0.5">
             <button 
               type="button"
               disabled={isLocked}
-              onClick={() => handleAdjust("away", -1)}
-              className="w-6 h-8 flex items-center justify-center bg-white text-gray-400 rounded-lg hover:text-stadium-green-800 disabled:opacity-0 transition-all font-black text-xs border border-gray-100 shadow-xs"
+              onClick={() => handleAdjust("away", 1)}
+              className="w-10 h-6 flex items-center justify-center bg-gray-50 text-gray-400 rounded-t-lg hover:bg-stadium-green-100 hover:text-stadium-green-800 disabled:opacity-0 transition-all font-black text-xs border border-b-0 border-gray-100 shadow-xs"
             >
-              -
+              ▲
             </button>
             <input
               type="number"
               disabled={isLocked}
-              className="w-8 h-8 bg-transparent text-center text-lg font-black text-stadium-green-800 focus:outline-hidden disabled:text-gray-400 transition-all placeholder:text-gray-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              className="w-10 h-10 border-x-2 border-gray-100 bg-white text-center text-xl font-black text-stadium-green-800 focus:outline-hidden disabled:bg-gray-50 disabled:text-gray-400 transition-all placeholder:text-gray-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               value={currentGuess.away}
               onChange={(e) => onGuessChange(currentGuess.home.toString(), e.target.value)}
             />
             <button 
               type="button"
               disabled={isLocked}
-              onClick={() => handleAdjust("away", 1)}
-              className="w-6 h-8 flex items-center justify-center bg-white text-gray-400 rounded-lg hover:text-stadium-green-800 disabled:opacity-0 transition-all font-black text-xs border border-gray-100 shadow-xs"
+              onClick={() => handleAdjust("away", -1)}
+              className="w-10 h-6 flex items-center justify-center bg-gray-50 text-gray-400 rounded-b-lg hover:bg-stadium-green-100 hover:text-stadium-green-800 disabled:opacity-0 transition-all font-black text-xs border border-t-0 border-gray-100 shadow-xs"
             >
-              +
+              ▼
             </button>
           </div>
         </div>
