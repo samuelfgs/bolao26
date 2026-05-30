@@ -22,6 +22,10 @@ export function PalpitesList({ poolId, allMatches, initialGuesses }: PalpitesLis
   const [guesses, setGuesses] = useState<Record<string, { home: string | number, away: string | number }>>(
     Object.fromEntries(initialGuesses.map(g => [g.matchId, { home: g.homeGuess, away: g.awayGuess }]))
   );
+
+  useEffect(() => {
+    setGuesses(Object.fromEntries(initialGuesses.map(g => [g.matchId, { home: g.homeGuess, away: g.awayGuess }])));
+  }, [initialGuesses]);
   const [hasChanges, setHasChanges] = useState(false);
   
   // Track current round per group
