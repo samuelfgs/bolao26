@@ -114,10 +114,7 @@ export function PalpitesList({ poolId, allMatches, initialGuesses, initialBonus 
           </div>
           <div className="space-y-2">
             <label className="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-500 ml-1">
-              <svg className="w-4 h-4 text-orange-500" fill="currentColor" viewBox="0 0 24 24">
-                {/* Soccer Ball (Bola de Ouro) */}
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm6.26 12.06l-2.61.91c-.24-1.28-1.07-2.38-2.22-3.02l1.68-2.12c1.78.69 3.06 2.3 3.15 4.23zm-7.69-7.22l1.68 2.12c-1.15.64-1.98 1.74-2.22 3.02l-2.61-.91c.09-1.93 1.37-3.54 3.15-4.23zm-3.69 7.22l2.61.91c.64 1.15 1.74 1.98 3.02 2.22l-.91 2.61c-1.93-.09-3.54-1.37-4.23-3.15zm9.38 0c-.69 1.78-2.3 3.06-4.23 3.15l-.91-2.61c1.28-.24 2.38-1.07 3.02-2.22l2.12-1.68c.09.28.14.58.14.88v2.48zM12 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
-              </svg>
+              <img src="/bola-de-ouro.png" alt="Bola de Ouro" className="w-5 h-5 object-contain" />
               Craque da Copa
             </label>
 
