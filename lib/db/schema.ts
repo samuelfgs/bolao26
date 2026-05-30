@@ -14,6 +14,7 @@ export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
   email: text("email").notNull().unique(),
   name: text("name"),
+  phone: text("phone"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -37,14 +38,16 @@ export const usersToPools = pgTable("users_to_pools", {
 // Matches (Partidas)
 export const matches = pgTable("matches", {
   id: uuid("id").primaryKey().defaultRandom(),
+  apiId: integer("api_id").unique(), // ID from Football-Data.org
   homeTeam: text("home_team").notNull(),
   awayTeam: text("away_team").notNull(),
   startTime: timestamp("start_time").notNull(),
   homeScore: integer("home_score"),
   awayScore: integer("away_score"),
+  matchday: integer("matchday"),
   status: text("status").$type<"scheduled" | "live" | "finished">().default("scheduled").notNull(),
   group: text("group"), // e.g., "Group A"
-  stage: text("stage").$type<"group" | "round_of_16" | "quarter_finals" | "semi_finals" | "final">().default("group").notNull(),
+  stage: text("stage").$type<"group" | "round_of_32" | "round_of_16" | "quarter_finals" | "semi_finals" | "third_place" | "final">().default("group").notNull(),
 });
 
 // Guesses (Palpites)

@@ -8,7 +8,7 @@ export async function createClient() {
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!url || !key) {
-    return null as any;
+    throw new Error(`Supabase configuration error: ${!url ? "URL is missing" : "Anon Key is empty or missing"}. Please check your .env.local file.`);
   }
 
   return createServerClient(
