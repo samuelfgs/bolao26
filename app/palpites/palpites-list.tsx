@@ -98,10 +98,7 @@ export function PalpitesList({ poolId, allMatches, initialGuesses, initialBonus 
           </div>
           <div className="space-y-2">
             <label className="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-500 ml-1">
-              <svg className="w-4 h-4 text-stadium-green-600" fill="currentColor" viewBox="0 0 24 24">
-                {/* Soccer Shoe (Chuteira) */}
-                <path d="M21.99 15.3c-.02-.12-.04-.25-.09-.36-.05-.12-.12-.22-.19-.32l-3-4C18.17 9.87 17.11 9.4 16 9.4c-.03 0-.07 0-.1.01l-5.69 1.14c-1.02.21-1.74 1.15-1.63 2.19.06.57.34 1.1.8 1.48l1.4.92c.62.4 1.4.52 2.06.33L16 14.5l1.64 2.18c.31.41.83.6 1.33.5.5-.1 1.08-.34 1.42-.71l1.5-1.5c.08-.1.11-.21.1-.37zM4 2v2c0 1.1.9 2 2 2h1v1.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V6h1c1.1 0 2-.9 2-2V2H4zm5 3H7V3h2v2z"/>
-              </svg>
+              <img src="/golden-boot.png" alt="Artilheiro" className="w-5 h-5 object-contain" />
               Artilheiro
             </label>
             <input
