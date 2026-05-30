@@ -18,6 +18,7 @@ export function Navbar() {
     { name: "Palpites", href: "/palpites" },
     { name: "Classificação", href: "/classificacao" },
     { name: "Ranking", href: "/ranking" },
+    { name: "Regulamento", href: "/regulamento" },
   ];
 
   return (
