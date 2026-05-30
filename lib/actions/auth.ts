@@ -11,6 +11,7 @@ function translateError(message: string) {
   if (message.includes("User already registered")) return "Este e-mail já está cadastrado.";
   if (message.includes("Password should be at least 6 characters")) return "A senha deve ter pelo menos 6 caracteres.";
   if (message.includes("Email not confirmed")) return "Por favor, confirme seu e-mail para entrar.";
+  if (message.includes("Database error saving new user")) return "Erro ao criar conta. Por favor, tente novamente.";
   // For development/debugging, let's show the original error if we don't know it
   return message || "Ocorreu um erro inesperado. Tente novamente.";
 }
