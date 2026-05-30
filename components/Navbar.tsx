@@ -17,7 +17,7 @@ export function Navbar() {
   const navItems = [
     { name: "Palpites", href: "/palpites" },
     { name: "Classificação", href: "/classificacao" },
-    { name: "Resultados", href: "/resultados" },
+    { name: "Ranking", href: "/ranking" },
   ];
 
   return (

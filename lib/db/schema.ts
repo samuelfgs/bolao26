@@ -56,8 +56,8 @@ export const guesses = pgTable("guesses", {
   userId: uuid("user_id").references(() => users.id).notNull(),
   poolId: uuid("pool_id").references(() => pools.id).notNull(),
   matchId: uuid("match_id").references(() => matches.id).notNull(),
-  homeGuess: integer("home_guess").notNull(),
-  awayGuess: integer("away_guess").notNull(),
+  homeGuess: integer("home_guess"),
+  awayGuess: integer("away_guess"),
   points: integer("points").default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (t) => ({

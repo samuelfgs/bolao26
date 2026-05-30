@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MatchCard } from "@/components/MatchCard";
 import { saveAllGuesses } from "@/lib/actions/pool";
 import { toast } from "sonner";
@@ -20,11 +20,11 @@ interface PalpitesListProps {
 export function PalpitesList({ poolId, allMatches, initialGuesses }: PalpitesListProps) {
   const [loading, setLoading] = useState(false);
   const [guesses, setGuesses] = useState<Record<string, { home: string | number, away: string | number }>>(
-    Object.fromEntries(initialGuesses.map(g => [g.matchId, { home: g.homeGuess, away: g.awayGuess }]))
+    Object.fromEntries(initialGuesses.map(g => [g.matchId, { home: g.homeGuess ?? "", away: g.awayGuess ?? "" }]))
   );
 
   useEffect(() => {
-    setGuesses(Object.fromEntries(initialGuesses.map(g => [g.matchId, { home: g.homeGuess, away: g.awayGuess }])));
+    setGuesses(Object.fromEntries(initialGuesses.map(g => [g.matchId, { home: g.homeGuess ?? "", away: g.awayGuess ?? "" }])));
   }, [initialGuesses]);
   const [hasChanges, setHasChanges] = useState(false);
   
@@ -42,15 +42,15 @@ export function PalpitesList({ poolId, allMatches, initialGuesses }: PalpitesLis
   const handleSaveAll = async () => {
     setLoading(true);
     const guessesToSave = Object.entries(guesses)
-      .filter(([_, val]) => val.home !== "" && val.away !== "")
+      .filter(([_, val]) => val.home !== "" || val.away !== "")
       .map(([matchId, val]) => ({
         matchId,
-        homeGuess: Number(val.home),
-        awayGuess: Number(val.away)
+        homeGuess: val.home,
+        awayGuess: val.away
       }));
 
     try {
-      await saveAllGuesses(poolId, guessesToSave);
+      await saveAllGuesses(poolId, guessesToSave as any);
       setHasChanges(false);
       toast.success("Palpites salvos com sucesso!");
     } catch (e: any) {
