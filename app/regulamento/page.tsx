@@ -150,9 +150,6 @@ export default function RegulamentoPage() {
               <li className="pl-2">
                 <strong className="text-stadium-green-900 uppercase text-xs">Mais Cravadas:</strong> Persistindo o empate, quem acertou o placar exato (Cravadas) mais vezes fica à frente.
               </li>
-              <li className="pl-2">
-                <strong className="text-stadium-green-900 uppercase text-xs">Data de Cadastro:</strong> Se ainda houver empate, vence o participante que se cadastrou no bolão primeiro.
-              </li>
             </ol>
           </div>
         </div>
