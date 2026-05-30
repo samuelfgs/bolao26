@@ -48,7 +48,7 @@ export async function joinPool(code: string) {
   return { poolId: pool.id };
 }
 
-export async function saveAllGuesses(poolId: string, guessesData: { matchId: string, homeGuess: number, awayGuess: number }[]) {
+export async function saveAllGuesses(poolId: string, guessesData: { matchId: string, homeGuess: string | number, awayGuess: string | number }[]) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -61,24 +61,33 @@ export async function saveAllGuesses(poolId: string, guessesData: { matchId: str
   const now = new Date();
   const validGuesses = guessesData.filter((g: any) => {
     const match = dbMatches.find((m: any) => m.id === g.matchId);
-    return match && now < new Date(match.startTime);
+    // Allow saving if at least one is provided, and match hasn't started
+    return match && now < new Date(match.startTime) && (g.homeGuess !== "" || g.awayGuess !== "");
   });
 
-  if (validGuesses.length === 0) return;
+  if (validGuesses.length === 0) {
+    console.log("No valid guesses to save (all matches might have started or all inputs empty).");
+    return;
+  }
+
+  console.log(`Saving ${validGuesses.length} guesses for user ${user.id} in pool ${poolId}`);
 
   for (const guess of validGuesses) {
+    const h = (guess.homeGuess === "" || guess.homeGuess === null) ? null : Number(guess.homeGuess);
+    const a = (guess.awayGuess === "" || guess.awayGuess === null) ? null : Number(guess.awayGuess);
+
     await db.insert(guesses).values({
       userId: user.id,
       poolId,
       matchId: guess.matchId,
-      homeGuess: guess.homeGuess,
-      awayGuess: guess.awayGuess,
+      homeGuess: h,
+      awayGuess: a,
     }).onConflictDoUpdate({
       target: [guesses.userId, guesses.poolId, guesses.matchId],
       set: { 
-        homeGuess: guess.homeGuess, 
-        awayGuess: guess.awayGuess,
-        createdAt: new Date(), // Update timestamp on change
+        homeGuess: h, 
+        awayGuess: a,
+        createdAt: new Date(),
       },
     });
   }
