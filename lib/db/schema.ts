@@ -31,6 +31,9 @@ export const pools = pgTable("pools", {
 export const usersToPools = pgTable("users_to_pools", {
   userId: uuid("user_id").references(() => users.id).notNull(),
   poolId: uuid("pool_id").references(() => pools.id).notNull(),
+  totalPoints: integer("total_points").default(0).notNull(),
+  totalCravadas: integer("total_cravadas").default(0).notNull(),
+  totalAcertos: integer("total_acertos").default(0).notNull(),
 }, (t) => ({
   pk: primaryKey({ columns: [t.userId, t.poolId] }),
 }));

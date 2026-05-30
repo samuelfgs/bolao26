@@ -83,6 +83,20 @@ export const flagCodeMap: Record<string, string> = {
   "Ghana": "gh", "Panama": "pa", "Uzbekistan": "uz", "Colombia": "co"
 };
 
+// Helper function to safely get translations ignoring case
+export function getTranslatedTeamName(name: string): string {
+  if (!name) return "";
+  const trimmed = name.trim();
+  return teamNameTranslations[trimmed] || trimmed;
+}
+
+export function getTeamFlagCode(name: string): string {
+  if (!name) return "un";
+  const trimmed = name.trim();
+  return flagCodeMap[trimmed] || "un";
+}
+
+
 export function MatchCard({ match, currentGuess, onGuessChange }: MatchCardProps) {
   const isLocked = new Date() >= new Date(match.startTime);
   const [formattedDate, setFormattedDate] = useState<string>("");
@@ -97,13 +111,6 @@ export function MatchCard({ match, currentGuess, onGuessChange }: MatchCardProps
       })
     );
   }, [match.startTime]);
-
-  const getFlagUrl = (teamName: string) => {
-    const code = flagCodeMap[teamName] || "un";
-    return `https://flagcdn.com/w80/${code}.png`;
-  };
-
-  const translateTeam = (name: string) => teamNameTranslations[name] || name;
 
   const handleAdjust = (type: "home" | "away", delta: number) => {
     const current = Number(type === "home" ? currentGuess.home : currentGuess.away) || 0;
@@ -141,10 +148,10 @@ export function MatchCard({ match, currentGuess, onGuessChange }: MatchCardProps
         {/* Home Team */}
         <div className="flex-1 flex flex-col items-center gap-1.5 min-w-0">
           <div className="w-10 h-7 sm:w-12 sm:h-8 relative bg-gray-100 rounded-lg overflow-hidden border border-gray-100 shadow-xs shrink-0">
-            <img src={getFlagUrl(match.homeTeam)} alt={match.homeTeam} className="w-full h-full object-cover" />
+            <img src={`https://flagcdn.com/w80/${getTeamFlagCode(match.homeTeam)}.png`} alt={match.homeTeam} className="w-full h-full object-cover" />
           </div>
           <div className="text-[10px] sm:text-[11px] font-black text-stadium-green-900 leading-tight uppercase tracking-tight text-center truncate w-full px-1">
-            {translateTeam(match.homeTeam)}
+            {getTranslatedTeamName(match.homeTeam)}
           </div>
         </div>
         
@@ -210,10 +217,10 @@ export function MatchCard({ match, currentGuess, onGuessChange }: MatchCardProps
         {/* Away Team */}
         <div className="flex-1 flex flex-col items-center gap-1.5 min-w-0">
           <div className="w-10 h-7 sm:w-12 sm:h-8 relative bg-gray-100 rounded-lg overflow-hidden border border-gray-100 shadow-xs shrink-0">
-            <img src={getFlagUrl(match.awayTeam)} alt={match.awayTeam} className="w-full h-full object-cover" />
+            <img src={`https://flagcdn.com/w80/${getTeamFlagCode(match.awayTeam)}.png`} alt={match.awayTeam} className="w-full h-full object-cover" />
           </div>
           <div className="text-[10px] sm:text-[11px] font-black text-stadium-green-900 leading-tight uppercase tracking-tight text-center truncate w-full px-1">
-            {translateTeam(match.awayTeam)}
+            {getTranslatedTeamName(match.awayTeam)}
           </div>
         </div>
       </div>
