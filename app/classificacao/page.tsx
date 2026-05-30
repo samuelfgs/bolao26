@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { matches } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { teamNameTranslations, flagCodeMap } from "@/components/MatchCard";
+import { teamNameTranslations, flagCodeMap } from "@/lib/constants";
 
 interface TeamStats {
   name: string;
