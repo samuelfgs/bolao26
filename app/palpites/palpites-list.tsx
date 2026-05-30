@@ -82,7 +82,12 @@ export function PalpitesList({ poolId, allMatches, initialGuesses, initialBonus 
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           <div className="space-y-2">
-            <label className="text-xs font-bold uppercase text-gray-500 ml-1">Campeão</label>
+            <label className="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-500 ml-1">
+              <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0011 15.9V19H7v2h10v-2h-4v-3.1a5.01 5.01 0 003.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM7 10.82C5.84 10.4 5 9.3 5 8V7h2v3.82zM19 8c0 1.3-.84 2.4-2 2.82V7h2v1z"/>
+              </svg>
+              Campeão
+            </label>
             <input
               type="text"
               placeholder="Ex: Brasil"
@@ -92,7 +97,13 @@ export function PalpitesList({ poolId, allMatches, initialGuesses, initialBonus 
             />
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-bold uppercase text-gray-500 ml-1">Artilheiro</label>
+            <label className="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-500 ml-1">
+              <svg className="w-4 h-4 text-stadium-green-600" fill="currentColor" viewBox="0 0 24 24">
+                {/* Soccer Shoe (Chuteira) */}
+                <path d="M21.99 15.3c-.02-.12-.04-.25-.09-.36-.05-.12-.12-.22-.19-.32l-3-4C18.17 9.87 17.11 9.4 16 9.4c-.03 0-.07 0-.1.01l-5.69 1.14c-1.02.21-1.74 1.15-1.63 2.19.06.57.34 1.1.8 1.48l1.4.92c.62.4 1.4.52 2.06.33L16 14.5l1.64 2.18c.31.41.83.6 1.33.5.5-.1 1.08-.34 1.42-.71l1.5-1.5c.08-.1.11-.21.1-.37zM4 2v2c0 1.1.9 2 2 2h1v1.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V6h1c1.1 0 2-.9 2-2V2H4zm5 3H7V3h2v2z"/>
+              </svg>
+              Artilheiro
+            </label>
             <input
               type="text"
               placeholder="Ex: Mbappé"
@@ -102,7 +113,14 @@ export function PalpitesList({ poolId, allMatches, initialGuesses, initialBonus 
             />
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-bold uppercase text-gray-500 ml-1">Craque da Copa</label>
+            <label className="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-500 ml-1">
+              <svg className="w-4 h-4 text-orange-500" fill="currentColor" viewBox="0 0 24 24">
+                {/* Soccer Ball (Bola de Ouro) */}
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm6.26 12.06l-2.61.91c-.24-1.28-1.07-2.38-2.22-3.02l1.68-2.12c1.78.69 3.06 2.3 3.15 4.23zm-7.69-7.22l1.68 2.12c-1.15.64-1.98 1.74-2.22 3.02l-2.61-.91c.09-1.93 1.37-3.54 3.15-4.23zm-3.69 7.22l2.61.91c.64 1.15 1.74 1.98 3.02 2.22l-.91 2.61c-1.93-.09-3.54-1.37-4.23-3.15zm9.38 0c-.69 1.78-2.3 3.06-4.23 3.15l-.91-2.61c1.28-.24 2.38-1.07 3.02-2.22l2.12-1.68c.09.28.14.58.14.88v2.48zM12 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
+              </svg>
+              Craque da Copa
+            </label>
+
             <input
               type="text"
               placeholder="Ex: Vinícius Jr."
