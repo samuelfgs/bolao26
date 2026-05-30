@@ -29,13 +29,11 @@ export default async function Home() {
           <h1 className="text-6xl font-black tracking-tighter uppercase italic">
             Bolão <span className="text-stadium-yellow">2026</span>
           </h1>
-          <p className="text-green-100 text-xl font-medium">Onde a emoção do campo encontra seus palpites.</p>
         </div>
 
         <div className="bg-white/10 backdrop-blur-lg p-8 rounded-3xl border border-white/20 shadow-2xl space-y-8">
           <div className="space-y-2">
             <h2 className="text-2xl font-bold">Pronto para o jogo?</h2>
-            <p className="text-green-200 text-sm">Entre com sua conta para participar dos bolões.</p>
           </div>
           
           <div className="space-y-4">
@@ -45,14 +43,6 @@ export default async function Home() {
             >
               Fazer Login
             </Link>
-            
-            <div className="flex items-center justify-center gap-2 text-xs text-green-300 font-semibold uppercase tracking-widest">
-              <span>●</span>
-              <span>100% Gratuito</span>
-              <span>●</span>
-              <span>Prêmios Reais</span>
-              <span>●</span>
-            </div>
           </div>
         </div>
 
