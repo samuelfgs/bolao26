@@ -40,6 +40,17 @@ export default async function PalpitesPage({ searchParams }: { searchParams: { p
     )
   );
 
+  const [poolMembership] = await db.select({
+    campeao: usersToPools.campeao,
+    artilheiro: usersToPools.artilheiro,
+    craque: usersToPools.craque,
+  }).from(usersToPools).where(
+    and(
+      eq(usersToPools.userId, user.id),
+      eq(usersToPools.poolId, poolId as string)
+    )
+  );
+
   return (
     <div className="min-h-screen bg-gray-50 pb-32 pt-8">
       <div className="max-w-4xl mx-auto p-6 md:p-8">
@@ -51,6 +62,11 @@ export default async function PalpitesPage({ searchParams }: { searchParams: { p
             homeGuess: g.homeGuess,
             awayGuess: g.awayGuess
           }))} 
+          initialBonus={{
+            campeao: poolMembership?.campeao || "",
+            artilheiro: poolMembership?.artilheiro || "",
+            craque: poolMembership?.craque || "",
+          }}
         />
       </div>
     </div>

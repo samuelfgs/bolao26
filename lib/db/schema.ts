@@ -34,6 +34,9 @@ export const usersToPools = pgTable("users_to_pools", {
   totalPoints: integer("total_points").default(0).notNull(),
   totalCravadas: integer("total_cravadas").default(0).notNull(),
   totalAcertos: integer("total_acertos").default(0).notNull(),
+  campeao: text("campeao"),
+  artilheiro: text("artilheiro"),
+  craque: text("craque"),
 }, (t) => ({
   pk: primaryKey({ columns: [t.userId, t.poolId] }),
 }));

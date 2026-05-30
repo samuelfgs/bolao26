@@ -48,11 +48,36 @@ export async function joinPool(code: string) {
   return { poolId: pool.id };
 }
 
-export async function saveAllGuesses(poolId: string, guessesData: { matchId: string, homeGuess: string | number, awayGuess: string | number }[]) {
+export async function saveAllGuesses(
+  poolId: string, 
+  guessesData: { matchId: string, homeGuess: string | number, awayGuess: string | number }[],
+  bonusGuesses?: { campeao: string, artilheiro: string, craque: string }
+) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) throw new Error("Não autorizado");
+
+  // Save bonus guesses if provided
+  if (bonusGuesses) {
+    await db.update(usersToPools)
+      .set({
+        campeao: bonusGuesses.campeao,
+        artilheiro: bonusGuesses.artilheiro,
+        craque: bonusGuesses.craque,
+      })
+      .where(
+        and(
+          eq(usersToPools.userId, user.id),
+          eq(usersToPools.poolId, poolId)
+        )
+      );
+  }
+
+  if (guessesData.length === 0) {
+    revalidatePath("/palpites");
+    return;
+  }
 
   // Filter out guesses for matches that have already started
   const matchIds = guessesData.map((g: any) => g.matchId);

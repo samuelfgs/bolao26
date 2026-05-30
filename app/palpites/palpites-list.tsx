@@ -15,17 +15,22 @@ interface PalpitesListProps {
   poolId: string;
   allMatches: any[];
   initialGuesses: Guess[];
+  initialBonus: { campeao: string, artilheiro: string, craque: string };
 }
 
-export function PalpitesList({ poolId, allMatches, initialGuesses }: PalpitesListProps) {
+export function PalpitesList({ poolId, allMatches, initialGuesses, initialBonus }: PalpitesListProps) {
   const [loading, setLoading] = useState(false);
   const [guesses, setGuesses] = useState<Record<string, { home: string | number, away: string | number }>>(
     Object.fromEntries(initialGuesses.map(g => [g.matchId, { home: g.homeGuess ?? "", away: g.awayGuess ?? "" }]))
   );
+  
+  const [bonus, setBonus] = useState(initialBonus);
 
   useEffect(() => {
     setGuesses(Object.fromEntries(initialGuesses.map(g => [g.matchId, { home: g.homeGuess ?? "", away: g.awayGuess ?? "" }])));
-  }, [initialGuesses]);
+    setBonus(initialBonus);
+  }, [initialGuesses, initialBonus]);
+  
   const [hasChanges, setHasChanges] = useState(false);
   
   // Track current round per group
@@ -36,6 +41,11 @@ export function PalpitesList({ poolId, allMatches, initialGuesses }: PalpitesLis
       ...prev,
       [matchId]: { home, away }
     }));
+    setHasChanges(true);
+  };
+
+  const handleBonusChange = (field: "campeao" | "artilheiro" | "craque", value: string) => {
+    setBonus(prev => ({ ...prev, [field]: value }));
     setHasChanges(true);
   };
 
@@ -50,7 +60,7 @@ export function PalpitesList({ poolId, allMatches, initialGuesses }: PalpitesLis
       }));
 
     try {
-      await saveAllGuesses(poolId, guessesToSave as any);
+      await saveAllGuesses(poolId, guessesToSave as any, bonus);
       setHasChanges(false);
       toast.success("Palpites salvos com sucesso!");
     } catch (e: any) {
@@ -65,6 +75,45 @@ export function PalpitesList({ poolId, allMatches, initialGuesses }: PalpitesLis
 
   return (
     <div className="space-y-16">
+      {/* Bonus Guesses */}
+      <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-xl border-2 border-stadium-green-600 space-y-6">
+        <h2 className="text-2xl font-black text-stadium-green-900 uppercase italic tracking-tighter border-b-2 border-gray-100 pb-2">
+          Palpites Especiais
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase text-gray-500 ml-1">Campeão</label>
+            <input
+              type="text"
+              placeholder="Ex: Brasil"
+              value={bonus.campeao}
+              onChange={(e) => handleBonusChange("campeao", e.target.value)}
+              className="w-full border-2 border-gray-100 p-4 rounded-2xl text-sm font-black text-stadium-green-900 focus:border-stadium-green-500 focus:outline-hidden transition-all uppercase placeholder:normal-case placeholder:font-medium placeholder:text-gray-300"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase text-gray-500 ml-1">Artilheiro</label>
+            <input
+              type="text"
+              placeholder="Ex: Mbappé"
+              value={bonus.artilheiro}
+              onChange={(e) => handleBonusChange("artilheiro", e.target.value)}
+              className="w-full border-2 border-gray-100 p-4 rounded-2xl text-sm font-black text-stadium-green-900 focus:border-stadium-green-500 focus:outline-hidden transition-all uppercase placeholder:normal-case placeholder:font-medium placeholder:text-gray-300"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase text-gray-500 ml-1">Craque da Copa</label>
+            <input
+              type="text"
+              placeholder="Ex: Vinícius Jr."
+              value={bonus.craque}
+              onChange={(e) => handleBonusChange("craque", e.target.value)}
+              className="w-full border-2 border-gray-100 p-4 rounded-2xl text-sm font-black text-stadium-green-900 focus:border-stadium-green-500 focus:outline-hidden transition-all uppercase placeholder:normal-case placeholder:font-medium placeholder:text-gray-300"
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Group Sections */}
       {allGroups.map(groupName => {
         const currentRound = groupRounds[groupName] || 1;
