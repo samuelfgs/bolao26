@@ -105,8 +105,11 @@ export default function RegulamentoPage() {
             Palpites Especiais (Bônus)
           </div>
           <div className="p-6">
-            <p className="text-sm text-gray-600 font-medium mb-6">
+            <p className="text-sm text-gray-600 font-medium mb-1">
               Estes palpites extras são definidos no início do torneio e renderão pontos bônus no final da Copa do Mundo.
+            </p>
+            <p className="text-xs text-red-600 font-bold mb-6 italic italic">
+              * Estes palpites serão encerrados no início da primeira partida do torneio.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-gray-50 border border-gray-100 p-4 rounded-2xl flex flex-col items-center text-center gap-2">
