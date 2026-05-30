@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { MatchCard } from "@/components/MatchCard";
 import { saveAllGuesses } from "@/lib/actions/pool";
+import { toast } from "sonner";
 
 interface Guess {
   matchId: string;
@@ -47,9 +48,9 @@ export function PalpitesList({ poolId, allMatches, initialGuesses }: PalpitesLis
     try {
       await saveAllGuesses(poolId, guessesToSave);
       setHasChanges(false);
-      alert("Palpites salvos com sucesso!");
+      toast.success("Palpites salvos com sucesso!");
     } catch (e: any) {
-      alert(e.message || "Erro ao salvar palpites");
+      toast.error(e.message || "Erro ao salvar palpites");
     } finally {
       setLoading(false);
     }

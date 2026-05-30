@@ -12,7 +12,7 @@ const client = connectionString ? postgres(connectionString, {
   ssl: 'require',
   prepare: false,
   connect_timeout: 10,
-  max: 1,
+  max: 10,
 }) : null;
 
 export const db = client ? drizzle(client, { schema }) : new Proxy({} as any, {

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { joinPool } from "@/lib/actions/pool";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 
 export default function Onboarding() {
   const [code, setCode] = useState("");
@@ -31,9 +32,12 @@ export default function Onboarding() {
     setError(null);
     try {
       await joinPool(code);
+      toast.success("Você entrou no bolão!");
       router.push("/palpites");
     } catch (e: any) {
-      setError(e.message || "Código inválido ou erro ao entrar");
+      const msg = e.message || "Código inválido ou erro ao entrar";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
