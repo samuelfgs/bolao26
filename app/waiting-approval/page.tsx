@@ -9,11 +9,12 @@ export default function WaitingApproval() {
   const router = useRouter();
   const supabase = createClient();
   const [loading, setLoading] = useState(true);
+  const [checking, setChecking] = useState(false);
 
-  useEffect(() => {
-    let intervalId: NodeJS.Timeout;
-
-    async function checkStatus() {
+  async function checkStatus(isManual = false) {
+    if (isManual) setChecking(true);
+    
+    try {
       const status = await getUserStatus();
       
       if (status === null) {
@@ -30,14 +31,27 @@ export default function WaitingApproval() {
         router.push("/onboarding");
         return;
       }
+      
+      if (isManual && status === "pending") {
+        const { toast } = await import("sonner");
+        toast.info("Ainda aguardando aprovação. Tente novamente em instantes!");
+      }
 
       setLoading(false);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      if (isManual) setChecking(false);
     }
+  }
+
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
 
     checkStatus();
 
     // Poll every 5 seconds
-    intervalId = setInterval(checkStatus, 5000);
+    intervalId = setInterval(() => checkStatus(false), 5000);
 
     return () => {
       if (intervalId) clearInterval(intervalId);
@@ -104,10 +118,11 @@ export default function WaitingApproval() {
           </div>
 
           <button
-            onClick={() => window.location.reload()}
-            className="w-full py-4 bg-stadium-green-600 text-white font-black rounded-xl hover:bg-stadium-green-700 transform active:scale-95 transition-all shadow-lg uppercase tracking-wider"
+            onClick={() => checkStatus(true)}
+            disabled={checking}
+            className="w-full py-4 bg-stadium-green-600 text-white font-black rounded-xl hover:bg-stadium-green-700 transform active:scale-95 transition-all shadow-lg uppercase tracking-wider disabled:opacity-50"
           >
-            Verificar Status
+            {checking ? "Verificando..." : "Verificar Status"}
           </button>
         </div>
       </div>
