@@ -20,7 +20,7 @@ export async function ensureApproved(userId: string, poolId?: string) {
       redirect("/onboarding");
     }
 
-    if (userPools.every(p => p.status === "pending")) {
+    if (userPools.every((p: { status: string }) => p.status === "pending")) {
       redirect("/waiting-approval");
     }
     
