@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
+import { getUserStatus } from "@/lib/actions/auth";
 
 export default function WaitingApproval() {
   const router = useRouter();
@@ -10,20 +11,38 @@ export default function WaitingApproval() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+
     async function checkStatus() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      const status = await getUserStatus();
+      
+      if (status === null) {
         router.push("/login");
         return;
       }
-      
-      // In a real app, we would fetch the user's status from our DB here
-      // For now, we'll just show the message. 
-      // The middleware/layout should handle redirecting them away if they get approved.
+
+      if (status === "approved") {
+        router.push("/palpites");
+        return;
+      }
+
+      if (status === "no_pool") {
+        router.push("/onboarding");
+        return;
+      }
+
       setLoading(false);
     }
+
     checkStatus();
-  }, [router, supabase]);
+
+    // Poll every 5 seconds
+    intervalId = setInterval(checkStatus, 5000);
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [router]);
 
   if (loading) {
     return (

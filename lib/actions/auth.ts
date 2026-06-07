@@ -47,6 +47,25 @@ export async function ensureApproved(userId: string, poolId?: string) {
   return poolId;
 }
 
+export async function getUserStatus() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const userPools = await db.select({
+    status: usersToPools.status,
+  })
+  .from(usersToPools)
+  .where(eq(usersToPools.userId, user.id));
+
+  if (userPools.length === 0) return "no_pool";
+  
+  // If they are in any pool that is approved, we consider them approved
+  if (userPools.some((p: { status: string }) => p.status === "approved")) return "approved";
+  if (userPools.some((p: { status: string }) => p.status === "pending")) return "pending";
+  return "rejected";
+}
+
 function translateError(message: string) {
   if (message.includes("Invalid login credentials")) return "E-mail ou senha inválidos.";
   if (message.includes("User already registered")) return "Este e-mail já está cadastrado.";
