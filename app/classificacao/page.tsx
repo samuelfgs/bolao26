@@ -2,6 +2,9 @@ import { db } from "@/lib/db";
 import { matches } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { teamNameTranslations, flagCodeMap } from "@/lib/constants";
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+import { ensureApproved } from "@/lib/actions/auth";
 
 interface TeamStats {
   name: string;
@@ -16,6 +19,15 @@ interface TeamStats {
 }
 
 export default async function ClassificacaoPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/");
+  }
+
+  await ensureApproved(user.id);
+
   const allGroupMatches = await db
     .select()
     .from(matches)

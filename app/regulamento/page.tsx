@@ -1,4 +1,17 @@
-export default function RegulamentoPage() {
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+import { ensureApproved } from "@/lib/actions/auth";
+
+export default async function RegulamentoPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/");
+  }
+
+  await ensureApproved(user.id);
+
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header Banner */}

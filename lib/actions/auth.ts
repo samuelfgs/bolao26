@@ -1,10 +1,51 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
+import { users, usersToPools } from "@/lib/db/schema";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { eq, and } from "drizzle-orm";
+
+export async function ensureApproved(userId: string, poolId?: string) {
+  if (!poolId) {
+    const userPools = await db.select({
+      poolId: usersToPools.poolId,
+      status: usersToPools.status,
+    })
+    .from(usersToPools)
+    .where(eq(usersToPools.userId, userId));
+
+    if (userPools.length === 0) {
+      redirect("/onboarding");
+    }
+
+    if (userPools.every(p => p.status === "pending")) {
+      redirect("/waiting-approval");
+    }
+    
+    return userPools[0].poolId;
+  }
+
+  const [membership] = await db.select()
+    .from(usersToPools)
+    .where(
+      and(
+        eq(usersToPools.userId, userId),
+        eq(usersToPools.poolId, poolId)
+      )
+    );
+
+  if (!membership) {
+    redirect("/onboarding");
+  }
+
+  if (membership.status === "pending") {
+    redirect("/waiting-approval");
+  }
+
+  return poolId;
+}
 
 function translateError(message: string) {
   if (message.includes("Invalid login credentials")) return "E-mail ou senha inválidos.";

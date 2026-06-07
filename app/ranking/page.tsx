@@ -3,6 +3,7 @@ import { users, guesses, usersToPools, pools } from "@/lib/db/schema";
 import { createClient } from "@/lib/supabase/server";
 import { eq, sum, desc } from "drizzle-orm";
 import { redirect } from "next/navigation";
+import { ensureApproved } from "@/lib/actions/auth";
 
 export default async function RankingPage({ searchParams }: { searchParams: { poolId?: string } }) {
   const supabase = await createClient();
@@ -13,20 +14,7 @@ export default async function RankingPage({ searchParams }: { searchParams: { po
   }
 
   const sp = await searchParams;
-  let poolId = sp.poolId;
-
-  if (!poolId) {
-    const userPools = await db.select({
-      id: usersToPools.poolId,
-    })
-    .from(usersToPools)
-    .where(eq(usersToPools.userId, user.id));
-
-    if (userPools.length === 0) {
-      redirect("/onboarding");
-    }
-    poolId = userPools[0].id;
-  }
+  const poolId = await ensureApproved(user.id, sp.poolId);
 
   // Fetch leaderboard data with P (Points), C (Cravadas), A (Acertos)
   const leaderboard = await db

@@ -15,6 +15,7 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   name: text("name"),
   phone: text("phone"),
+  isAdmin: text("role").$type<"user" | "admin">().default("user").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -31,6 +32,7 @@ export const pools = pgTable("pools", {
 export const usersToPools = pgTable("users_to_pools", {
   userId: uuid("user_id").references(() => users.id).notNull(),
   poolId: uuid("pool_id").references(() => pools.id).notNull(),
+  status: text("status").$type<"pending" | "approved" | "rejected">().default("pending").notNull(),
   totalPoints: integer("total_points").default(0).notNull(),
   totalCravadas: integer("total_cravadas").default(0).notNull(),
   totalAcertos: integer("total_acertos").default(0).notNull(),

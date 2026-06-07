@@ -8,6 +8,20 @@
       "when": 1780103402441,
       "tag": "0000_jittery_the_hood",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1780795882981,
+      "tag": "0001_add_role_and_status",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1780796000000,
+      "tag": "0002_approve_existing_users",
+      "breakpoints": true
     }
   ]
 }

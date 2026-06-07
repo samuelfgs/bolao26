@@ -3,14 +3,24 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "@/lib/actions/auth";
-import { useState } from "react";
+import { isAdmin } from "@/lib/actions/admin";
+import { useState, useEffect } from "react";
 
-export function Navbar() {
+export default function Navbar() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isUserAdmin, setIsUserAdmin] = useState(false);
+
+  useEffect(() => {
+    async function checkAdmin() {
+      const admin = await isAdmin();
+      setIsUserAdmin(admin);
+    }
+    checkAdmin();
+  }, []);
 
   // Don't show navbar on login, register, home or onboarding pages
-  if (["/login", "/register", "/", "/onboarding"].includes(pathname)) {
+  if (["/login", "/register", "/", "/onboarding", "/waiting-approval"].includes(pathname)) {
     return null;
   }
 
@@ -20,6 +30,10 @@ export function Navbar() {
     { name: "Ranking", href: "/ranking" },
     { name: "Regulamento", href: "/regulamento" },
   ];
+
+  if (isUserAdmin) {
+    navItems.push({ name: "Aprovações", href: "/admin/approvals" });
+  }
 
   return (
     <nav className="sticky top-0 w-full bg-stadium-green-900/95 backdrop-blur-md border-b border-white/10 shadow-2xl z-50">

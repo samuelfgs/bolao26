@@ -42,6 +42,7 @@ export async function joinPool(code: string) {
   await db.insert(usersToPools).values({
     userId: user.id,
     poolId: pool.id,
+    status: "pending",
   }).onConflictDoNothing();
 
   revalidatePath("/palpites");

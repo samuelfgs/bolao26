@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { and, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { PalpitesList } from "./palpites-list";
+import { ensureApproved } from "@/lib/actions/auth";
 
 export default async function PalpitesPage({ searchParams }: { searchParams: { poolId?: string } }) {
   const supabase = await createClient();
@@ -14,23 +15,7 @@ export default async function PalpitesPage({ searchParams }: { searchParams: { p
   }
 
   const sp = await searchParams;
-  let poolId = sp.poolId;
-
-  if (!poolId) {
-    const userPools = await db.select({
-      id: pools.id,
-      name: pools.name
-    })
-    .from(usersToPools)
-    .innerJoin(pools, eq(usersToPools.poolId, pools.id))
-    .where(eq(usersToPools.userId, user.id));
-
-    if (userPools.length === 0) {
-      redirect("/onboarding");
-    }
-
-    poolId = userPools[0].id;
-  }
+  const poolId = await ensureApproved(user.id, sp.poolId);
 
   const allMatches = await db.select().from(matches).orderBy(matches.startTime);
   const userGuesses = await db.select().from(guesses).where(

@@ -7,10 +7,13 @@ import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 
 export default function Onboarding() {
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [needsProfileUpdate, setNeedsProfileUpdate] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
@@ -21,21 +24,50 @@ export default function Onboarding() {
       if (!user) {
         router.push("/login");
       } else {
+        const metadata = user.user_metadata;
+        const hasName = !!(metadata.full_name || metadata.name);
+        const hasPhone = !!metadata.phone;
+        
+        setName(metadata.full_name || metadata.name || "");
+        setPhone(metadata.phone || "");
+        
+        if (!hasName || !hasPhone) {
+          setNeedsProfileUpdate(true);
+        }
         setCheckingAuth(false);
       }
     }
     checkAuth();
   }, [router, supabase]);
 
-  async function handleJoin() {
+  async function handleUpdateProfileAndJoin() {
     setLoading(true);
     setError(null);
     try {
+      if (needsProfileUpdate) {
+        if (!name || !phone) {
+          throw new Error("Por favor, preencha seu nome e telefone.");
+        }
+        
+        const { error: updateError } = await supabase.auth.updateUser({
+          data: { 
+            full_name: name,
+            phone: phone 
+          }
+        });
+        
+        if (updateError) throw updateError;
+      }
+
+      if (!code) {
+        throw new Error("Insira o código do bolão.");
+      }
+
       await joinPool(code);
-      toast.success("Você entrou no bolão!");
-      router.push("/palpites");
+      toast.success("Perfil atualizado e solicitação enviada!");
+      router.push("/waiting-approval");
     } catch (e: any) {
-      const msg = e.message || "Código inválido ou erro ao entrar";
+      const msg = e.message || "Erro ao processar. Verifique os dados.";
       setError(msg);
       toast.error(msg);
     } finally {
@@ -67,9 +99,9 @@ export default function Onboarding() {
             </svg>
           </div>
           <h1 className="text-4xl font-black uppercase italic tracking-tighter">
-            Entrar no <span className="text-stadium-yellow">Bolão</span>
+            Quase lá, <span className="text-stadium-yellow">Craque!</span>
           </h1>
-          <p className="text-green-100 font-medium">Insira o código enviado pelo organizador para começar.</p>
+          <p className="text-green-100 font-medium">Complete seu perfil para entrar no jogo.</p>
         </div>
 
         <div className="bg-white p-8 rounded-3xl shadow-2xl border-t-8 border-stadium-green-600 space-y-6 text-gray-900">
@@ -81,6 +113,39 @@ export default function Onboarding() {
 
           <div className="space-y-6">
             <div className="space-y-4">
+              {needsProfileUpdate && (
+                <>
+                  <div className="space-y-1 text-left">
+                    <label className="text-xs font-bold uppercase text-gray-400 ml-1">
+                      Seu Nome
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Nome Completo"
+                      className="block w-full rounded-xl border-2 border-gray-100 px-4 py-3 text-gray-900 focus:border-stadium-green-500 focus:outline-hidden transition-all"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-1 text-left">
+                    <label className="text-xs font-bold uppercase text-gray-400 ml-1">
+                      Telefone (para alertas)
+                    </label>
+                    <input
+                      type="tel"
+                      placeholder="(11) 99999-9999"
+                      className="block w-full rounded-xl border-2 border-gray-100 px-4 py-3 text-gray-900 focus:border-stadium-green-500 focus:outline-hidden transition-all"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                    />
+                    <p className="text-[10px] text-gray-400 mt-1 ml-1">
+                      * Usaremos para avisar quando você esquecer um palpite!
+                    </p>
+                  </div>
+                </>
+              )}
+
               <div className="space-y-1 text-left">
                 <label className="text-xs font-bold uppercase text-gray-400 ml-1">
                   Código de Convite
@@ -95,11 +160,11 @@ export default function Onboarding() {
               </div>
 
               <button
-                onClick={handleJoin}
-                disabled={loading || !code}
+                onClick={handleUpdateProfileAndJoin}
+                disabled={loading || !code || (needsProfileUpdate && (!name || !phone))}
                 className="w-full py-4 bg-stadium-yellow text-stadium-green-900 font-black rounded-xl hover:bg-yellow-300 transform active:scale-95 transition-all shadow-lg uppercase tracking-wider disabled:opacity-30"
               >
-                {loading ? "Processando..." : "Confirmar Escalação"}
+                {loading ? "Processando..." : "Confirmar e Entrar"}
               </button>
               
               <p className="text-center text-[10px] text-gray-400 font-medium italic">
