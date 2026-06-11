@@ -14,11 +14,45 @@ import { calculatePoints } from "./calculate-points";
 type Match = InferSelectModel<typeof matches>;
 
 export async function createPool(name: string) {
-  // ... (rest of the function is unchanged)
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("Não autorizado");
+
+  const code = uuidv4().slice(0, 8).toUpperCase();
+
+  const [newPool] = await db.insert(pools).values({
+    name,
+    code,
+    ownerId: user.id,
+  }).returning();
+
+  await db.insert(usersToPools).values({
+    userId: user.id,
+    poolId: newPool.id,
+  });
+
+  revalidatePath("/palpites");
+  return { code };
 }
 
 export async function joinPool(code: string) {
-  // ... (rest of the function is unchanged)
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("Não autorizado");
+
+  const [pool] = await db.select().from(pools).where(eq(pools.code, code.toUpperCase()));
+  if (!pool) throw new Error("Bolão não encontrado");
+
+  await db.insert(usersToPools).values({
+    userId: user.id,
+    poolId: pool.id,
+    status: "pending",
+  }).onConflictDoNothing();
+
+  revalidatePath("/palpites");
+  return { poolId: pool.id };
 }
 
 export async function saveAllGuesses(
@@ -26,7 +60,74 @@ export async function saveAllGuesses(
   guessesData: { matchId: string, homeGuess: string | number, awayGuess: string | number }[],
   bonusGuesses?: { campeao: string, artilheiro: string, craque: string }
 ) {
-  // ... (rest of the function is unchanged)
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("Não autorizado");
+
+  const now = new Date();
+  // Deadline: Midnight BRT between June 11 and June 12, 2026
+  // BRT is UTC-3, so midnight BRT is 03:00 UTC of the next day.
+  const bonusDeadline = new Date("2026-06-12T03:00:00Z");
+  let bonusSaved = false;
+
+  // Save bonus guesses if provided AND before deadline
+  if (bonusGuesses && now < bonusDeadline) {
+    await db.update(usersToPools)
+      .set({
+        campeao: bonusGuesses.campeao,
+        artilheiro: bonusGuesses.artilheiro,
+        craque: bonusGuesses.craque,
+      })
+      .where(
+        and(
+          eq(usersToPools.userId, user.id),
+          eq(usersToPools.poolId, poolId)
+        )
+      );
+    bonusSaved = true;
+  }
+
+  // Filter out guesses for matches that have already started
+  const matchIds = guessesData.map((g: any) => g.matchId);
+  let validGuesses: any[] = [];
+  
+  if (matchIds.length > 0) {
+    const dbMatches = await db.select().from(matches).where(inArray(matches.id, matchIds));
+    validGuesses = guessesData.filter((g: any) => {
+      const match = dbMatches.find((m: any) => m.id === g.matchId);
+      return match && now < new Date(match.startTime) && (g.homeGuess !== "" || g.awayGuess !== "");
+    });
+  }
+
+  if (validGuesses.length === 0) {
+    if (bonusSaved) revalidatePath("/palpites");
+    return;
+  }
+
+  console.log(`Saving ${validGuesses.length} match guesses for user ${user.id} in pool ${poolId}`);
+
+  for (const guess of validGuesses) {
+    const h = (guess.homeGuess === "" || guess.homeGuess === null) ? null : Number(guess.homeGuess);
+    const a = (guess.awayGuess === "" || guess.awayGuess === null) ? null : Number(guess.awayGuess);
+
+    await db.insert(guesses).values({
+      userId: user.id,
+      poolId,
+      matchId: guess.matchId,
+      homeGuess: h,
+      awayGuess: a,
+    }).onConflictDoUpdate({
+      target: [guesses.userId, guesses.poolId, guesses.matchId],
+      set: { 
+        homeGuess: h, 
+        awayGuess: a,
+        createdAt: new Date(),
+      },
+    });
+  }
+
+  revalidatePath("/palpites");
 }
 
 export async function updateLiveData() {
@@ -90,7 +191,6 @@ export async function updateLiveData() {
     const startTime = new Date(event.date);
 
     // Find the match in our DB by team names
-    // We normalize names and check if they match
     const dbMatch = dbMatches.find((m: Match) => 
       normalizeName(m.homeTeam) === normalizeName(homeTeamName) && 
       normalizeName(m.awayTeam) === normalizeName(awayTeamName)
@@ -172,4 +272,3 @@ function mapStage(apiStage: string): "group" | "round_of_32" | "round_of_16" | "
 export async function triggerUpdate() {
   await updateLiveData();
 }
-

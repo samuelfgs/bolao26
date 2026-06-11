@@ -85,14 +85,25 @@ export function PalpitesList({
   // Get unique groups
   const allGroups = Array.from(new Set(allMatches.map(m => m.group))).filter(Boolean).sort();
 
+  // Deadline: Midnight BRT between June 11 and June 12, 2026
+  const bonusDeadline = new Date("2026-06-12T03:00:00Z");
+  const isBonusLocked = new Date() >= bonusDeadline;
+
   return (
     <div className="space-y-16">
       {/* Bonus Guesses */}
       {!hideBonus && (
         <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-xl border-2 border-stadium-green-600 space-y-6">
-          <h2 className="text-2xl font-black text-stadium-green-900 uppercase italic tracking-tighter border-b-2 border-gray-100 pb-2">
-            Palpites Especiais
-          </h2>
+          <div className="flex items-center justify-between border-b-2 border-gray-100 pb-2">
+            <h2 className="text-2xl font-black text-stadium-green-900 uppercase italic tracking-tighter">
+              Palpites Especiais
+            </h2>
+            {isBonusLocked && (
+              <span className="text-[10px] font-black uppercase tracking-widest text-red-500 bg-red-50 px-3 py-1 rounded-full border border-red-100">
+                Encerrado
+              </span>
+            )}
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <div className="space-y-2">
               <label className="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-500 ml-1">
@@ -105,7 +116,7 @@ export function PalpitesList({
                 type="text"
                 placeholder="Ex: Brasil"
                 value={bonus.campeao}
-                disabled={isReadOnly}
+                disabled={isReadOnly || isBonusLocked}
                 onChange={(e) => handleBonusChange("campeao", e.target.value)}
                 className="w-full border-2 border-gray-100 p-4 rounded-2xl text-sm font-black text-stadium-green-900 focus:border-stadium-green-500 focus:outline-hidden transition-all uppercase placeholder:normal-case placeholder:font-medium placeholder:text-gray-300 disabled:bg-gray-50 disabled:text-gray-400"
               />
@@ -119,7 +130,7 @@ export function PalpitesList({
                 type="text"
                 placeholder="Ex: Mbappé"
                 value={bonus.artilheiro}
-                disabled={isReadOnly}
+                disabled={isReadOnly || isBonusLocked}
                 onChange={(e) => handleBonusChange("artilheiro", e.target.value)}
                 className="w-full border-2 border-gray-100 p-4 rounded-2xl text-sm font-black text-stadium-green-900 focus:border-stadium-green-500 focus:outline-hidden transition-all uppercase placeholder:normal-case placeholder:font-medium placeholder:text-gray-300 disabled:bg-gray-50 disabled:text-gray-400"
               />
@@ -134,7 +145,7 @@ export function PalpitesList({
                 type="text"
                 placeholder="Ex: Vinícius Jr."
                 value={bonus.craque}
-                disabled={isReadOnly}
+                disabled={isReadOnly || isBonusLocked}
                 onChange={(e) => handleBonusChange("craque", e.target.value)}
                 className="w-full border-2 border-gray-100 p-4 rounded-2xl text-sm font-black text-stadium-green-900 focus:border-stadium-green-500 focus:outline-hidden transition-all uppercase placeholder:normal-case placeholder:font-medium placeholder:text-gray-300 disabled:bg-gray-50 disabled:text-gray-400"
               />
