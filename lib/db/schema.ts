@@ -6,6 +6,7 @@ import {
   integer,
   primaryKey,
   unique,
+  jsonb,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -71,6 +72,14 @@ export const guesses = pgTable("guesses", {
 }, (t) => ({
   unq: unique().on(t.userId, t.poolId, t.matchId),
 }));
+
+// API Cache table
+export const apiCache = pgTable("api_cache", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  key: text("key").notNull().unique(),
+  data: jsonb("data"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({

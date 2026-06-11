@@ -1,25 +1,37 @@
 import { db } from "@/lib/db";
-import { matches, guesses, usersToPools } from "@/lib/db/schema";
+import { matches, guesses, usersToPools, users } from "@/lib/db/schema";
 import { createClient } from "@/lib/supabase/server";
-import { and, eq, inArray, type InferSelectModel } from "drizzle-orm";
+import { and, eq, lte, inArray, type InferSelectModel } from "drizzle-orm";
 import { redirect } from "next/navigation";
-import { PalpitesList } from "./palpites-list";
+import { PalpitesList } from "../palpites-list";
 import { ensureApproved } from "@/lib/actions/auth";
+import Link from "next/link";
 
 type Match = InferSelectModel<typeof matches>;
 
-export default async function PalpitesPage() {
+export default async function PalpitesUserPage({ 
+  params,
+}: { 
+  params: Promise<{ userId: string }>,
+}) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user: currentUser } } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!currentUser) {
     redirect("/");
   }
 
-  const poolId = await ensureApproved(user.id);
+  const p = await params;
+  const targetUserId = p.userId;
+
+  if (targetUserId === currentUser.id) {
+    redirect("/palpites");
+  }
+  
+  const poolId = await ensureApproved(currentUser.id);
 
   const allMatches: Match[] = await db.select().from(matches).orderBy(matches.startTime);
-  
+
   const lockedMatches = allMatches.filter((m: Match) => new Date(m.startTime) <= new Date());
   let communityTrends: Record<string, any> = {};
 
@@ -66,15 +78,22 @@ export default async function PalpitesPage() {
       };
     }
   }
-  
-  const userGuesses = await db.select().from(guesses).where(
+
+  const allUserGuesses = await db.select().from(guesses).where(
     and(
-      eq(guesses.userId, user.id),
+      eq(guesses.userId, targetUserId),
       eq(guesses.poolId, poolId)
     )
   );
+  
+  type UserGuess = typeof allUserGuesses[number];
 
-  type UserGuess = typeof userGuesses[number];
+  const matchesById = new Map(allMatches.map(m => [m.id, m]));
+
+  const visibleGuesses = allUserGuesses.filter((guess: UserGuess) => {
+    const match = matchesById.get(guess.matchId);
+    return match && new Date(match.startTime) <= new Date();
+  });
 
   const [poolMembership] = await db.select({
     campeao: usersToPools.campeao,
@@ -82,18 +101,35 @@ export default async function PalpitesPage() {
     craque: usersToPools.craque,
   }).from(usersToPools).where(
     and(
-      eq(usersToPools.userId, user.id),
+      eq(usersToPools.userId, targetUserId),
       eq(usersToPools.poolId, poolId)
     )
   );
 
+  const [targetUser] = await db.select({ name: users.name, email: users.email }).from(users).where(eq(users.id, targetUserId));
+  const targetUserName = targetUser?.name || targetUser?.email.split('@')[0] || "";
+
   return (
     <div className="min-h-screen bg-gray-50 pb-32 pt-8">
       <div className="max-w-4xl mx-auto p-6 md:p-8">
+        <div className="mb-8 p-6 bg-stadium-green-800 text-white rounded-3xl shadow-lg border-4 border-stadium-green-900 relative overflow-hidden">
+           <div className="absolute inset-0 opacity-10 pointer-events-none">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full border-x-4 border-white"></div>
+          </div>
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-stadium-yellow mb-1">Visualizando palpites de</p>
+              <h1 className="text-3xl font-black uppercase italic tracking-tighter">{targetUserName}</h1>
+            </div>
+            <Link href="/ranking" className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/20">
+              Voltar ao Ranking
+            </Link>
+          </div>
+        </div>
         <PalpitesList 
           poolId={poolId} 
           allMatches={allMatches} 
-          initialGuesses={userGuesses.map((g: UserGuess) => ({
+          initialGuesses={visibleGuesses.map((g: UserGuess) => ({
             matchId: g.matchId,
             homeGuess: g.homeGuess,
             awayGuess: g.awayGuess,
@@ -104,6 +140,8 @@ export default async function PalpitesPage() {
             artilheiro: poolMembership?.artilheiro || "",
             craque: poolMembership?.craque || "",
           }}
+          isReadOnly={true}
+          hideBonus={true}
           communityTrends={communityTrends}
         />
       </div>

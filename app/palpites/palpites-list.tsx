@@ -9,6 +9,7 @@ interface Guess {
   matchId: string;
   homeGuess: number | string;
   awayGuess: number | string;
+  points?: number | null;
 }
 
 interface PalpitesListProps {
@@ -16,18 +17,29 @@ interface PalpitesListProps {
   allMatches: any[];
   initialGuesses: Guess[];
   initialBonus: { campeao: string, artilheiro: string, craque: string };
+  isReadOnly?: boolean;
+  hideBonus?: boolean;
+  communityTrends?: Record<string, { total: number; home: number; tie: number; away: number; }>;
 }
 
-export function PalpitesList({ poolId, allMatches, initialGuesses, initialBonus }: PalpitesListProps) {
+export function PalpitesList({ 
+  poolId, 
+  allMatches, 
+  initialGuesses, 
+  initialBonus, 
+  isReadOnly = false, 
+  hideBonus = false,
+  communityTrends = {} 
+}: PalpitesListProps) {
   const [loading, setLoading] = useState(false);
-  const [guesses, setGuesses] = useState<Record<string, { home: string | number, away: string | number }>>(
-    Object.fromEntries(initialGuesses.map(g => [g.matchId, { home: g.homeGuess ?? "", away: g.awayGuess ?? "" }]))
+  const [guesses, setGuesses] = useState<Record<string, { home: string | number, away: string | number, points?: number | null }>>(
+    Object.fromEntries(initialGuesses.map(g => [g.matchId, { home: g.homeGuess ?? "", away: g.awayGuess ?? "", points: g.points }]))
   );
   
   const [bonus, setBonus] = useState(initialBonus);
 
   useEffect(() => {
-    setGuesses(Object.fromEntries(initialGuesses.map(g => [g.matchId, { home: g.homeGuess ?? "", away: g.awayGuess ?? "" }])));
+    setGuesses(Object.fromEntries(initialGuesses.map(g => [g.matchId, { home: g.homeGuess ?? "", away: g.awayGuess ?? "", points: g.points }])));
     setBonus(initialBonus);
   }, [initialGuesses, initialBonus]);
   
@@ -76,55 +88,60 @@ export function PalpitesList({ poolId, allMatches, initialGuesses, initialBonus 
   return (
     <div className="space-y-16">
       {/* Bonus Guesses */}
-      <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-xl border-2 border-stadium-green-600 space-y-6">
-        <h2 className="text-2xl font-black text-stadium-green-900 uppercase italic tracking-tighter border-b-2 border-gray-100 pb-2">
-          Palpites Especiais
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <div className="space-y-2">
-            <label className="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-500 ml-1">
-              <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0011 15.9V19H7v2h10v-2h-4v-3.1a5.01 5.01 0 003.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM7 10.82C5.84 10.4 5 9.3 5 8V7h2v3.82zM19 8c0 1.3-.84 2.4-2 2.82V7h2v1z"/>
-              </svg>
-              Campeão
-            </label>
-            <input
-              type="text"
-              placeholder="Ex: Brasil"
-              value={bonus.campeao}
-              onChange={(e) => handleBonusChange("campeao", e.target.value)}
-              className="w-full border-2 border-gray-100 p-4 rounded-2xl text-sm font-black text-stadium-green-900 focus:border-stadium-green-500 focus:outline-hidden transition-all uppercase placeholder:normal-case placeholder:font-medium placeholder:text-gray-300"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-500 ml-1">
-              <img src="/golden-boot.png" alt="Artilheiro" className="w-5 h-5 object-contain" />
-              Artilheiro
-            </label>
-            <input
-              type="text"
-              placeholder="Ex: Mbappé"
-              value={bonus.artilheiro}
-              onChange={(e) => handleBonusChange("artilheiro", e.target.value)}
-              className="w-full border-2 border-gray-100 p-4 rounded-2xl text-sm font-black text-stadium-green-900 focus:border-stadium-green-500 focus:outline-hidden transition-all uppercase placeholder:normal-case placeholder:font-medium placeholder:text-gray-300"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-500 ml-1">
-              <img src="/bola-de-ouro.png" alt="Bola de Ouro" className="w-5 h-5 object-contain" />
-              Craque da Copa
-            </label>
+      {!hideBonus && (
+        <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-xl border-2 border-stadium-green-600 space-y-6">
+          <h2 className="text-2xl font-black text-stadium-green-900 uppercase italic tracking-tighter border-b-2 border-gray-100 pb-2">
+            Palpites Especiais
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div className="space-y-2">
+              <label className="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-500 ml-1">
+                <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0011 15.9V19H7v2h10v-2h-4v-3.1a5.01 5.01 0 003.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM7 10.82C5.84 10.4 5 9.3 5 8V7h2v3.82zM19 8c0 1.3-.84 2.4-2 2.82V7h2v1z"/>
+                </svg>
+                Campeão
+              </label>
+              <input
+                type="text"
+                placeholder="Ex: Brasil"
+                value={bonus.campeao}
+                disabled={isReadOnly}
+                onChange={(e) => handleBonusChange("campeao", e.target.value)}
+                className="w-full border-2 border-gray-100 p-4 rounded-2xl text-sm font-black text-stadium-green-900 focus:border-stadium-green-500 focus:outline-hidden transition-all uppercase placeholder:normal-case placeholder:font-medium placeholder:text-gray-300 disabled:bg-gray-50 disabled:text-gray-400"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-500 ml-1">
+                <img src="/golden-boot.png" alt="Artilheiro" className="w-5 h-5 object-contain" />
+                Artilheiro
+              </label>
+              <input
+                type="text"
+                placeholder="Ex: Mbappé"
+                value={bonus.artilheiro}
+                disabled={isReadOnly}
+                onChange={(e) => handleBonusChange("artilheiro", e.target.value)}
+                className="w-full border-2 border-gray-100 p-4 rounded-2xl text-sm font-black text-stadium-green-900 focus:border-stadium-green-500 focus:outline-hidden transition-all uppercase placeholder:normal-case placeholder:font-medium placeholder:text-gray-300 disabled:bg-gray-50 disabled:text-gray-400"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-500 ml-1">
+                <img src="/bola-de-ouro.png" alt="Bola de Ouro" className="w-5 h-5 object-contain" />
+                Craque da Copa
+              </label>
 
-            <input
-              type="text"
-              placeholder="Ex: Vinícius Jr."
-              value={bonus.craque}
-              onChange={(e) => handleBonusChange("craque", e.target.value)}
-              className="w-full border-2 border-gray-100 p-4 rounded-2xl text-sm font-black text-stadium-green-900 focus:border-stadium-green-500 focus:outline-hidden transition-all uppercase placeholder:normal-case placeholder:font-medium placeholder:text-gray-300"
-            />
+              <input
+                type="text"
+                placeholder="Ex: Vinícius Jr."
+                value={bonus.craque}
+                disabled={isReadOnly}
+                onChange={(e) => handleBonusChange("craque", e.target.value)}
+                className="w-full border-2 border-gray-100 p-4 rounded-2xl text-sm font-black text-stadium-green-900 focus:border-stadium-green-500 focus:outline-hidden transition-all uppercase placeholder:normal-case placeholder:font-medium placeholder:text-gray-300 disabled:bg-gray-50 disabled:text-gray-400"
+              />
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Group Sections */}
       {allGroups.map(groupName => {
@@ -164,6 +181,9 @@ export function PalpitesList({ poolId, allMatches, initialGuesses, initialBonus 
                     match={match}
                     currentGuess={guesses[match.id] || { home: "", away: "" }}
                     onGuessChange={(home, away) => handleGuessChange(match.id, home, away)}
+                    isReadOnly={isReadOnly}
+                    trend={communityTrends[match.id]}
+                    points={guesses[match.id]?.points}
                   />
                 ))}
               </div>
@@ -177,7 +197,7 @@ export function PalpitesList({ poolId, allMatches, initialGuesses, initialBonus 
       })}
 
       {/* Batch Save Button */}
-      {hasChanges && (
+      {!isReadOnly && hasChanges && (
         <div className="fixed bottom-4 sm:bottom-8 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-40 animate-in fade-in slide-in-from-bottom-8 duration-500">
           <button
             onClick={handleSaveAll}

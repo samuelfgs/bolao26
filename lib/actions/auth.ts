@@ -7,44 +7,31 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { eq, and } from "drizzle-orm";
 
-export async function ensureApproved(userId: string, poolId?: string) {
-  if (!poolId) {
-    const userPools = await db.select({
-      poolId: usersToPools.poolId,
-      status: usersToPools.status,
-    })
-    .from(usersToPools)
-    .where(eq(usersToPools.userId, userId));
+export async function ensureApproved(userId: string) {
+  const userPools = await db.select({
+    poolId: usersToPools.poolId,
+    status: usersToPools.status,
+  })
+  .from(usersToPools)
+  .where(eq(usersToPools.userId, userId));
 
-    if (userPools.length === 0) {
-      redirect("/onboarding");
-    }
-
-    if (userPools.every((p: { status: string }) => p.status === "pending")) {
-      redirect("/waiting-approval");
-    }
-    
-    return userPools[0].poolId;
-  }
-
-  const [membership] = await db.select()
-    .from(usersToPools)
-    .where(
-      and(
-        eq(usersToPools.userId, userId),
-        eq(usersToPools.poolId, poolId)
-      )
-    );
-
-  if (!membership) {
+  if (userPools.length === 0) {
     redirect("/onboarding");
   }
 
-  if (membership.status === "pending") {
-    redirect("/waiting-approval");
+  type UserPool = typeof userPools[number];
+
+  const approvedPool = userPools.find((p: UserPool) => p.status === "approved");
+
+  if (!approvedPool) {
+    // If they have pending, go to waiting room. Otherwise, they must be new or rejected.
+    if (userPools.some((p: UserPool) => p.status === "pending")) {
+      redirect("/waiting-approval");
+    }
+    redirect("/onboarding");
   }
 
-  return poolId;
+  return approvedPool.poolId;
 }
 
 export async function getUserStatus() {
@@ -60,9 +47,11 @@ export async function getUserStatus() {
 
   if (userPools.length === 0) return "no_pool";
   
+  type UserPool = typeof userPools[number];
+
   // If they are in any pool that is approved, we consider them approved
-  if (userPools.some((p: { status: string }) => p.status === "approved")) return "approved";
-  if (userPools.some((p: { status: string }) => p.status === "pending")) return "pending";
+  if (userPools.some((p: UserPool) => p.status === "approved")) return "approved";
+  if (userPools.some((p: UserPool) => p.status === "pending")) return "pending";
   return "rejected";
 }
 
