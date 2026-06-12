@@ -8,6 +8,7 @@ import { revalidatePath } from "next/cache";
 import { v4 as uuidv4 } from "uuid";
 
 import { sendWhatsAppMessage, formatApprovalMessage } from "@/lib/services/whatsapp";
+import { sendMatchReminders } from "@/lib/services/reminders";
 import { users } from "@/lib/db/schema";
 import { calculatePoints } from "./calculate-points";
 
@@ -66,66 +67,75 @@ export async function saveAllGuesses(
   if (!user) throw new Error("Não autorizado");
 
   const now = new Date();
-  // Deadline: Midnight BRT between June 11 and June 12, 2026
-  // BRT is UTC-3, so midnight BRT is 03:00 UTC of the next day.
-  const bonusDeadline = new Date("2026-06-12T03:00:00Z");
-  let bonusSaved = false;
 
-  // Save bonus guesses if provided AND before deadline
-  if (bonusGuesses && now < bonusDeadline) {
-    await db.update(usersToPools)
-      .set({
-        campeao: bonusGuesses.campeao,
-        artilheiro: bonusGuesses.artilheiro,
-        craque: bonusGuesses.craque,
-      })
-      .where(
-        and(
-          eq(usersToPools.userId, user.id),
-          eq(usersToPools.poolId, poolId)
-        )
-      );
-    bonusSaved = true;
-  }
+  await db.transaction(async (tx: any) => {
+    // 1. Validation: Check if any guess is for a match that already started
+    const matchIds = guessesData.map((g: any) => g.matchId);
+    if (matchIds.length > 0) {
+      const dbMatches = await tx.select().from(matches).where(inArray(matches.id, matchIds));
 
-  // Filter out guesses for matches that have already started
-  const matchIds = guessesData.map((g: any) => g.matchId);
-  let validGuesses: any[] = [];
-  
-  if (matchIds.length > 0) {
-    const dbMatches = await db.select().from(matches).where(inArray(matches.id, matchIds));
-    validGuesses = guessesData.filter((g: any) => {
-      const match = dbMatches.find((m: any) => m.id === g.matchId);
-      return match && now < new Date(match.startTime) && (g.homeGuess !== "" || g.awayGuess !== "");
-    });
-  }
+      for (const g of guessesData) {
+        // A "guess" is only considered if at least one side is filled
+        const isGuessEmpty = (g.homeGuess === "" || g.homeGuess === null) && (g.awayGuess === "" || g.awayGuess === null);
+        if (isGuessEmpty) continue;
 
-  if (validGuesses.length === 0) {
-    if (bonusSaved) revalidatePath("/palpites");
-    return;
-  }
+        const match = dbMatches.find((m: any) => m.id === g.matchId);
+        if (!match) continue;
 
-  console.log(`Saving ${validGuesses.length} match guesses for user ${user.id} in pool ${poolId}`);
+        if (now >= new Date(match.startTime)) {
+          throw new Error(`O jogo ${match.homeTeam} x ${match.awayTeam} já começou. Não é possível salvar palpites.`);
+        }
+      }
+    }
 
-  for (const guess of validGuesses) {
-    const h = (guess.homeGuess === "" || guess.homeGuess === null) ? null : Number(guess.homeGuess);
-    const a = (guess.awayGuess === "" || guess.awayGuess === null) ? null : Number(guess.awayGuess);
+    // 2. Save bonus guesses if provided AND before deadline
+    // Deadline: Midnight BRT between June 11 and June 12, 2026
+    // BRT is UTC-3, so midnight BRT is 03:00 UTC of the next day.
+    const bonusDeadline = new Date("2026-06-13T03:00:00Z");
+    if (bonusGuesses && now < bonusDeadline) {
+      await tx.update(usersToPools)
+        .set({
+          campeao: bonusGuesses.campeao,
+          artilheiro: bonusGuesses.artilheiro,
+          craque: bonusGuesses.craque,
+        })
+        .where(
+          and(
+            eq(usersToPools.userId, user.id),
+            eq(usersToPools.poolId, poolId)
+          )
+        );
+    }
 
-    await db.insert(guesses).values({
-      userId: user.id,
-      poolId,
-      matchId: guess.matchId,
-      homeGuess: h,
-      awayGuess: a,
-    }).onConflictDoUpdate({
-      target: [guesses.userId, guesses.poolId, guesses.matchId],
-      set: { 
-        homeGuess: h, 
-        awayGuess: a,
-        createdAt: new Date(),
-      },
-    });
-  }
+    // 3. Save match guesses
+    const guessesToSave = guessesData.filter((g: any) => 
+      (g.homeGuess !== "" && g.homeGuess !== null) || (g.awayGuess !== "" && g.awayGuess !== null)
+    );
+
+    if (guessesToSave.length > 0) {
+      console.log(`Saving ${guessesToSave.length} match guesses for user ${user.id} in pool ${poolId}`);
+
+      for (const guess of guessesToSave) {
+        const h = (guess.homeGuess === "" || guess.homeGuess === null) ? null : Number(guess.homeGuess);
+        const a = (guess.awayGuess === "" || guess.awayGuess === null) ? null : Number(guess.awayGuess);
+
+        await tx.insert(guesses).values({
+          userId: user.id,
+          poolId,
+          matchId: guess.matchId,
+          homeGuess: h,
+          awayGuess: a,
+        }).onConflictDoUpdate({
+          target: [guesses.userId, guesses.poolId, guesses.matchId],
+          set: { 
+            homeGuess: h, 
+            awayGuess: a,
+            createdAt: new Date(),
+          },
+        });
+      }
+    }
+  });
 
   revalidatePath("/palpites");
 }
@@ -271,4 +281,5 @@ function mapStage(apiStage: string): "group" | "round_of_32" | "round_of_16" | "
 
 export async function triggerUpdate() {
   await updateLiveData();
+  await sendMatchReminders();
 }

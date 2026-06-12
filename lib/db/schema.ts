@@ -7,6 +7,7 @@ import {
   primaryKey,
   unique,
   jsonb,
+  index,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -57,7 +58,9 @@ export const matches = pgTable("matches", {
   status: text("status").$type<"scheduled" | "live" | "finished">().default("scheduled").notNull(),
   group: text("group"), // e.g., "Group A"
   stage: text("stage").$type<"group" | "round_of_32" | "round_of_16" | "quarter_finals" | "semi_finals" | "third_place" | "final">().default("group").notNull(),
-});
+}, (t) => ({
+  startTimeIdx: index("start_time_idx").on(t.startTime),
+}));
 
 // Guesses (Palpites)
 export const guesses = pgTable("guesses", {
@@ -81,10 +84,22 @@ export const apiCache = pgTable("api_cache", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
+// Sent Reminders (to avoid double notifications)
+export const sentReminders = pgTable("sent_reminders", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => users.id).notNull(),
+  matchId: uuid("match_id").references(() => matches.id).notNull(),
+  type: text("type").$type<"match_reminder">().notNull(),
+  sentAt: timestamp("sent_at").defaultNow().notNull(),
+}, (t) => ({
+  unq: unique().on(t.userId, t.matchId, t.type),
+}));
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   pools: many(usersToPools),
   guesses: many(guesses),
+  reminders: many(sentReminders),
 }));
 
 export const poolsRelations = relations(pools, ({ one, many }) => ({
@@ -100,10 +115,16 @@ export const usersToPoolsRelations = relations(usersToPools, ({ one }) => ({
 
 export const matchesRelations = relations(matches, ({ many }) => ({
   guesses: many(guesses),
+  reminders: many(sentReminders),
 }));
 
 export const guessesRelations = relations(guesses, ({ one }) => ({
   user: one(users, { fields: [guesses.userId], references: [users.id] }),
   pool: one(pools, { fields: [guesses.poolId], references: [pools.id] }),
   match: one(matches, { fields: [guesses.matchId], references: [matches.id] }),
+}));
+
+export const sentRemindersRelations = relations(sentReminders, ({ one }) => ({
+  user: one(users, { fields: [sentReminders.userId], references: [users.id] }),
+  match: one(matches, { fields: [sentReminders.matchId], references: [matches.id] }),
 }));

@@ -22,7 +22,12 @@ export async function sendWhatsAppMessage(to: string, message: string) {
   }
 
   // Evolution API expects numbers in format: 5513996983289 (no +, no spaces)
-  const cleanTo = to.replace(/\D/g, "");
+  let cleanTo = to.replace(/\D/g, "");
+  
+  // If it's a Brazilian number (10 or 11 digits) without the 55, add it
+  if ((cleanTo.length === 10 || cleanTo.length === 11) && !cleanTo.startsWith("55")) {
+    cleanTo = `55${cleanTo}`;
+  }
 
   try {
     const response = await fetch(
@@ -35,11 +40,8 @@ export async function sendWhatsAppMessage(to: string, message: string) {
         },
         body: JSON.stringify({
           number: cleanTo,
-          text: message,
-          options: {
-            delay: 1200,
-            presence: "composing",
-            linkPreview: true
+          textMessage: {
+            text: message
           }
         }),
       }
@@ -47,7 +49,7 @@ export async function sendWhatsAppMessage(to: string, message: string) {
 
     const data = await response.json();
     if (!response.ok) {
-      console.error("Evolution API Error:", data);
+      console.error("Evolution API Error:", JSON.stringify(data, null, 2));
       return { success: false, error: data };
     }
 
@@ -59,5 +61,5 @@ export async function sendWhatsAppMessage(to: string, message: string) {
 }
 
 export function formatApprovalMessage(userName: string, poolName: string) {
-  return `⚽ *Novo Palpiteiro na Área!*\n\nO craque *${userName}* acabou de solicitar entrada no bolão *${poolName}*.\n\nAcesse o painel para aprovar: ${process.env.NEXT_PUBLIC_APP_URL || 'https://bolao26.com'}/admin/approvals`;
+  return `⚽ *Novo Palpiteiro na Área!*\n\nO craque *${userName}* acabou de solicitar entrada no bolão *${poolName}*.\n\nAcesse o painel para aprovar: ${process.env.NEXT_PUBLIC_APP_URL || 'https://bolao26-nine.vercel.app'}/admin/approvals`;
 }

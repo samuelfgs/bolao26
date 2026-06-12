@@ -86,7 +86,7 @@ export function PalpitesList({
   const allGroups = Array.from(new Set(allMatches.map(m => m.group))).filter(Boolean).sort();
 
   // Deadline: Midnight BRT between June 11 and June 12, 2026
-  const bonusDeadline = new Date("2026-06-12T03:00:00Z");
+  const bonusDeadline = new Date("2026-06-13T03:00:00Z");
   const isBonusLocked = new Date() >= bonusDeadline;
 
   return (
