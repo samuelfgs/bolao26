@@ -212,6 +212,37 @@ export function PalpitesList({
                     isReadOnly={isReadOnly}
                     trend={communityTrends[match.id]}
                     points={guesses[match.id]?.points}
+                    isSaved={
+                      (() => {
+                        const initial = initialGuesses.find(ig => ig.matchId === match.id);
+                        const currentHome = guesses[match.id]?.home?.toString() ?? "";
+                        const currentAway = guesses[match.id]?.away?.toString() ?? "";
+                        const savedHome = initial?.homeGuess?.toString() ?? "";
+                        const savedAway = initial?.awayGuess?.toString() ?? "";
+                        
+                        return (
+                          currentHome !== "" && 
+                          currentAway !== "" && 
+                          currentHome === savedHome &&
+                          currentAway === savedAway
+                        );
+                      })()
+                    }
+                    isDraft={
+                      (() => {
+                        const initial = initialGuesses.find(ig => ig.matchId === match.id);
+                        const currentHome = guesses[match.id]?.home?.toString() ?? "";
+                        const currentAway = guesses[match.id]?.away?.toString() ?? "";
+                        const savedHome = initial?.homeGuess?.toString() ?? "";
+                        const savedAway = initial?.awayGuess?.toString() ?? "";
+                        
+                        // If current input is empty, it's not a draft (it's pending)
+                        if (currentHome === "" && currentAway === "") return false;
+                        
+                        // It's a draft if it differs from what's saved
+                        return currentHome !== savedHome || currentAway !== savedAway;
+                      })()
+                    }
                   />
                 ))}
               </div>

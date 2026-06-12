@@ -18,6 +18,8 @@ interface MatchCardProps {
   onGuessChange: (home: string, away: string) => void;
   isReadOnly?: boolean;
   points?: number | null;
+  isSaved?: boolean;
+  isDraft?: boolean;
   trend?: {
     total: number;
     home: number;
@@ -26,7 +28,16 @@ interface MatchCardProps {
   };
 }
 
-export function MatchCard({ match, currentGuess, onGuessChange, isReadOnly = false, points, trend }: MatchCardProps) {
+export function MatchCard({ 
+  match, 
+  currentGuess, 
+  onGuessChange, 
+  isReadOnly = false, 
+  points, 
+  isSaved = false, 
+  isDraft = false,
+  trend 
+}: MatchCardProps) {
   const isLive = match.status === 'live';
   const isFinished = match.status === 'finished';
   const isLocked = isReadOnly || new Date() >= new Date(match.startTime) || isLive || isFinished;
@@ -77,9 +88,46 @@ export function MatchCard({ match, currentGuess, onGuessChange, isReadOnly = fal
         </div>
 
         {points !== undefined && points !== null && isLocked && (
-          <div className={`px-2 py-0.5 rounded-full font-black text-[9px] flex items-center gap-1 ${points > 0 ? 'bg-stadium-yellow text-stadium-green-900' : 'bg-gray-200 text-gray-400'}`}>
-            {isLive && <span className="w-1 h-1 bg-stadium-green-900 rounded-full animate-pulse"></span>}
+          <div className={`px-2 py-0.5 rounded-full font-black text-[9px] flex items-center gap-1 ${
+            points === 3
+              ? 'bg-green-100 text-green-800'
+              : points === 1
+                ? 'bg-yellow-100 text-yellow-800'
+                : points === 0
+                  ? 'bg-red-100 text-red-700'
+                  : 'bg-gray-200 text-gray-400'
+          }`}>
+            {isLive && <span className={`w-1 h-1 rounded-full animate-pulse ${
+              points === 3 ? 'bg-green-800' : points === 1 ? 'bg-yellow-800' : 'bg-red-700'
+            }`}></span>}
             {points} {points === 1 ? 'PONTO' : 'PONTOS'} {isLive && '(LIVE)'}
+          </div>
+        )}
+
+        {!isLocked && isSaved && (
+          <div className="px-2 py-0.5 rounded-full font-black text-[9px] bg-stadium-green-100 text-stadium-green-800 flex items-center gap-1 border border-stadium-green-200">
+            <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" />
+            </svg>
+            SALVO
+          </div>
+        )}
+
+        {!isLocked && !isSaved && isDraft && (
+          <div className="px-2 py-0.5 rounded-full font-black text-[9px] bg-orange-100 text-orange-700 flex items-center gap-1 border border-orange-200">
+            <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            RASCUNHO
+          </div>
+        )}
+
+        {!isLocked && !isSaved && !isDraft && (
+          <div className="px-2 py-0.5 rounded-full font-black text-[9px] bg-red-100 text-red-700 flex items-center gap-1 border border-red-200 animate-pulse">
+            <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            PENDENTE
           </div>
         )}
       </div>
@@ -170,8 +218,24 @@ export function MatchCard({ match, currentGuess, onGuessChange, isReadOnly = fal
       </div>
       
       {(isLive || isFinished) && match.homeScore !== null && (
-        <div className={`${isLive ? 'bg-red-50 border-red-100' : 'bg-stadium-green-50 border-stadium-green-100'} p-2 rounded-xl border`}>
-          <p className={`text-[9px] font-black uppercase tracking-widest text-center ${isLive ? 'text-red-700' : 'text-stadium-green-800'}`}>
+        <div className={`p-2 rounded-xl border ${
+          points === 3
+            ? 'bg-green-50 border-green-100'
+            : points === 1
+              ? 'bg-yellow-50 border-yellow-100'
+              : points === 0
+                ? 'bg-red-50 border-red-100'
+                : 'bg-stadium-green-50 border-stadium-green-100'
+        }`}>
+          <p className={`text-[9px] font-black uppercase tracking-widest text-center ${
+            points === 3
+              ? 'text-green-800'
+              : points === 1
+                ? 'text-yellow-800'
+                : points === 0
+                  ? 'text-red-700'
+                  : 'text-stadium-green-800'
+          }`}>
             {isLive ? 'Placar ao Vivo:' : 'Placar Final:'} <span className="text-xs ml-1">{match.homeScore ?? "0"} x {match.awayScore ?? "0"}</span>
           </p>
         </div>
