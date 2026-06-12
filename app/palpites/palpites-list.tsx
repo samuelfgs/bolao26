@@ -63,8 +63,24 @@ export function PalpitesList({
 
   const handleSaveAll = async () => {
     setLoading(true);
+    const now = new Date();
+
     const guessesToSave = Object.entries(guesses)
-      .filter(([_, val]) => val.home !== "" || val.away !== "")
+      .filter(([matchId, val]) => {
+        // Filter out empty guesses
+        if (val.home === "" && val.away === "") return false;
+
+        // Filter out matches that have already started or are locked
+        const match = allMatches.find(m => m.id === matchId);
+        if (!match) return false;
+
+        const isLocked = isReadOnly || 
+                        now >= new Date(match.startTime) || 
+                        match.status === "live" || 
+                        match.status === "finished";
+        
+        return !isLocked;
+      })
       .map(([matchId, val]) => ({
         matchId,
         homeGuess: val.home,
@@ -72,7 +88,8 @@ export function PalpitesList({
       }));
 
     try {
-      await saveAllGuesses(poolId, guessesToSave as any, bonus);
+      // Only send bonus if not locked
+      await saveAllGuesses(poolId, guessesToSave as any, isBonusLocked ? undefined : bonus);
       setHasChanges(false);
       toast.success("Palpites salvos com sucesso!");
     } catch (e: any) {

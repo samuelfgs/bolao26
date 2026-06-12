@@ -69,28 +69,56 @@ export async function saveAllGuesses(
   const now = new Date();
 
   await db.transaction(async (tx: any) => {
-    // 1. Validation: Check if any guess is for a match that already started
+    // 1. Validation & Filtering: Only allow saving guesses for matches that haven't started yet.
     const matchIds = guessesData.map((g: any) => g.matchId);
+    let guessesToSave: any[] = [];
+
     if (matchIds.length > 0) {
       const dbMatches = await tx.select().from(matches).where(inArray(matches.id, matchIds));
+      const existingGuesses = await tx.select().from(guesses).where(
+        and(
+          eq(guesses.userId, user.id),
+          eq(guesses.poolId, poolId),
+          inArray(guesses.matchId, matchIds)
+        )
+      );
 
       for (const g of guessesData) {
         // A "guess" is only considered if at least one side is filled
-        const isGuessEmpty = (g.homeGuess === "" || g.homeGuess === null) && (g.awayGuess === "" || g.awayGuess === null);
-        if (isGuessEmpty) continue;
-
+        const isNewGuessEmpty = (g.homeGuess === "" || g.homeGuess === null) && (g.awayGuess === "" || g.awayGuess === null);
+        
         const match = dbMatches.find((m: any) => m.id === g.matchId);
         if (!match) continue;
 
-        if (now >= new Date(match.startTime)) {
-          throw new Error(`O jogo ${match.homeTeam} x ${match.awayTeam} já começou. Não é possível salvar palpites.`);
+        const isLocked = now >= new Date(match.startTime) || match.status === "live" || match.status === "finished";
+        const existing = existingGuesses.find((eg: any) => eg.matchId === g.matchId);
+
+        if (isLocked) {
+          // If the match has started, we check if the user is trying to CHANGE it.
+          // If they are trying to save the SAME thing, we just skip it silently.
+          // If they are trying to change it, we throw an error.
+          
+          const newHome = isNewGuessEmpty ? null : Number(g.homeGuess);
+          const newAway = isNewGuessEmpty ? null : Number(g.awayGuess);
+          const currentHome = existing ? existing.homeGuess : null;
+          const currentAway = existing ? existing.awayGuess : null;
+
+          if (newHome !== currentHome || newAway !== currentAway) {
+            throw new Error(`O jogo ${match.homeTeam} x ${match.awayTeam} já começou. Não é possível alterar palpites.`);
+          }
+          
+          // Match started and same guess -> just skip
+          continue;
+        }
+
+        // Match hasn't started -> add to save list if not empty
+        if (!isNewGuessEmpty) {
+          guessesToSave.push(g);
         }
       }
     }
 
-    // 2. Save bonus guesses if provided AND before deadline
-    // Deadline: Midnight BRT between June 11 and June 12, 2026
-    // BRT is UTC-3, so midnight BRT is 03:00 UTC of the next day.
+    // 2. Save bonus guesses ... (unchanged)
     const bonusDeadline = new Date("2026-06-13T03:00:00Z");
     if (bonusGuesses && now < bonusDeadline) {
       await tx.update(usersToPools)
@@ -108,16 +136,12 @@ export async function saveAllGuesses(
     }
 
     // 3. Save match guesses
-    const guessesToSave = guessesData.filter((g: any) => 
-      (g.homeGuess !== "" && g.homeGuess !== null) || (g.awayGuess !== "" && g.awayGuess !== null)
-    );
-
     if (guessesToSave.length > 0) {
       console.log(`Saving ${guessesToSave.length} match guesses for user ${user.id} in pool ${poolId}`);
 
       for (const guess of guessesToSave) {
-        const h = (guess.homeGuess === "" || guess.homeGuess === null) ? null : Number(guess.homeGuess);
-        const a = (guess.awayGuess === "" || guess.awayGuess === null) ? null : Number(guess.awayGuess);
+        const h = Number(guess.homeGuess);
+        const a = Number(guess.awayGuess);
 
         await tx.insert(guesses).values({
           userId: user.id,
