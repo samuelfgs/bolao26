@@ -296,13 +296,13 @@ export function MatchCard({
                 </button>
               </DialogTrigger>
               <DialogContent className="max-w-md">
-                <DialogHeader className="space-y-4">
-                  <DialogTitle className="text-xl font-black text-stadium-green-900 uppercase italic tracking-tighter text-center sm:text-left">
+                <DialogHeader className="space-y-4 items-center">
+                  <DialogTitle className="text-xl font-black text-stadium-green-900 uppercase italic tracking-tighter text-center">
                     Todos os Palpites
                   </DialogTitle>
                   
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-center sm:justify-start gap-3 flex-wrap">
+                  <div className="space-y-3 flex flex-col items-center w-full">
+                    <div className="flex items-center justify-center gap-3 flex-wrap">
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-5 relative bg-gray-100 rounded-md overflow-hidden border border-gray-100 shadow-xs">
                           <img src={`https://flagcdn.com/w80/${getTeamFlagCode(match.homeTeam)}.png`} alt={match.homeTeam} className="w-full h-full object-cover" />
@@ -323,7 +323,7 @@ export function MatchCard({
                     </div>
 
                     {(isLive || isFinished) && match.homeScore !== null && (
-                      <div className={`p-2 rounded-xl border self-center sm:self-start inline-block ${
+                      <div className={`p-2 rounded-xl border inline-block ${
                         isLive ? 'bg-red-50 border-red-100' : 'bg-stadium-green-50 border-stadium-green-100'
                       }`}>
                         <p className={`text-[9px] font-black uppercase tracking-widest text-center ${
