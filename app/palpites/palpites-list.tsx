@@ -206,6 +206,7 @@ export function PalpitesList({
                 {groupMatches.map((match) => (
                   <MatchCard
                     key={match.id}
+                    poolId={poolId}
                     match={match}
                     currentGuess={guesses[match.id] || { home: "", away: "" }}
                     onGuessChange={(home, away) => handleGuessChange(match.id, home, away)}

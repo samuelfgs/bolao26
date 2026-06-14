@@ -84,7 +84,7 @@ export default async function RankingPage() {
                         href={player.id === user.id ? `/palpites` : `/palpites/${player.id}`}
                         className="font-black text-stadium-green-900 uppercase tracking-tight hover:text-stadium-green-600 transition-colors"
                       >
-                        {player.name || player.email!.split('@')[0]}
+                        {(player.name || player.email!.split('@')[0]).split(' ')[0]}
                       </Link>
                     </td>
                     <td className="p-6 text-center font-black text-lg text-stadium-green-900 tabular-nums">

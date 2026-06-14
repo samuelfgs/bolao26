@@ -107,7 +107,7 @@ export default async function PalpitesUserPage({
   );
 
   const [targetUser] = await db.select({ name: users.name, email: users.email }).from(users).where(eq(users.id, targetUserId));
-  const targetUserName = targetUser?.name || targetUser?.email.split('@')[0] || "";
+  const targetUserName = (targetUser?.name || targetUser?.email.split('@')[0] || "").split(' ')[0];
 
   return (
     <div className="min-h-screen bg-gray-50 pb-32 pt-8">

@@ -3,7 +3,7 @@
 import { db } from "@/lib/db";
 import { pools, usersToPools, guesses, matches, apiCache } from "@/lib/db/schema";
 import { createClient } from "@/lib/supabase/server";
-import { eq, and, inArray, type InferSelectModel } from "drizzle-orm";
+import { eq, and, inArray, desc, type InferSelectModel } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { v4 as uuidv4 } from "uuid";
 
@@ -306,4 +306,42 @@ function mapStage(apiStage: string): "group" | "round_of_32" | "round_of_16" | "
 export async function triggerUpdate() {
   await updateLiveData();
   await sendMatchReminders();
+}
+
+export async function getMatchGuesses(poolId: string, matchId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("Não autorizado");
+
+  const match = await db.query.matches.findFirst({
+    where: eq(matches.id, matchId),
+  });
+
+  if (!match) throw new Error("Partida não encontrada");
+
+  const now = new Date();
+  const isLocked = now >= new Date(match.startTime) || match.status === "live" || match.status === "finished";
+
+  if (!isLocked) {
+    throw new Error("Palpites ainda estão ocultos até o início da partida.");
+  }
+
+  const allGuesses = await db.select({
+    userName: users.name,
+    homeGuess: guesses.homeGuess,
+    awayGuess: guesses.awayGuess,
+    points: guesses.points,
+  })
+  .from(guesses)
+  .innerJoin(users, eq(guesses.userId, users.id))
+  .where(
+    and(
+      eq(guesses.poolId, poolId),
+      eq(guesses.matchId, matchId)
+    )
+  )
+  .orderBy(desc(guesses.points), users.name);
+
+  return allGuesses;
 }

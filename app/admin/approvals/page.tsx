@@ -58,10 +58,10 @@ export default function AdminApprovals() {
               <div key={`${user.userId}-${user.poolId}`} className="bg-white rounded-2xl p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-stadium-green-100 rounded-full flex items-center justify-center text-stadium-green-800 font-black text-xl">
-                    {user.userName?.charAt(0) || "U"}
+                    {user.userName?.split(' ')[0].charAt(0) || "U"}
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900 text-lg">{user.userName || "Sem Nome"}</h3>
+                    <h3 className="font-bold text-gray-900 text-lg">{user.userName?.split(' ')[0] || "Sem Nome"}</h3>
                     <div className="flex flex-col text-sm text-gray-500">
                       <span>{user.userEmail}</span>
                       <span>{user.userPhone || "Sem telefone"}</span>

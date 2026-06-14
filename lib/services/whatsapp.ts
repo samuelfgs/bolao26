@@ -61,5 +61,6 @@ export async function sendWhatsAppMessage(to: string, message: string) {
 }
 
 export function formatApprovalMessage(userName: string, poolName: string) {
-  return `⚽ *Novo Palpiteiro na Área!*\n\nO craque *${userName}* acabou de solicitar entrada no bolão *${poolName}*.\n\nAcesse o painel para aprovar: ${process.env.NEXT_PUBLIC_APP_URL || 'https://bolao26-nine.vercel.app'}/admin/approvals`;
+  const firstName = userName.split(' ')[0];
+  return `⚽ *Novo Palpiteiro na Área!*\n\nO craque *${firstName}* acabou de solicitar entrada no bolão *${poolName}*.\n\nAcesse o painel para aprovar: ${process.env.NEXT_PUBLIC_APP_URL || 'https://bolao26-nine.vercel.app'}/admin/approvals`;
 }
