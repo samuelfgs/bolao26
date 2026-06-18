@@ -370,7 +370,7 @@ export async function getMatchGuesses(poolId: string, matchId: string) {
     )
   );
 
-  const mappedGuesses = allGuesses.map(g => {
+  const mappedGuesses = allGuesses.map((g: { userName: string | null; homeGuess: number | null; awayGuess: number | null }) => {
     let pts = 0;
     if (g.homeGuess !== null && g.awayGuess !== null && match.homeScore !== null && match.awayScore !== null) {
       const exactScore = g.homeGuess === match.homeScore && g.awayGuess === match.awayScore;
@@ -382,8 +382,15 @@ export async function getMatchGuesses(poolId: string, matchId: string) {
     return { ...g, points: pts };
   });
 
+  interface MappedGuess {
+    userName: string | null;
+    homeGuess: number | null;
+    awayGuess: number | null;
+    points: number;
+  }
+
   // Order by points desc, then user name
-  mappedGuesses.sort((a, b) => {
+  mappedGuesses.sort((a: MappedGuess, b: MappedGuess) => {
     if (b.points !== a.points) return b.points - a.points;
     return (a.userName || "").localeCompare(b.userName || "");
   });
