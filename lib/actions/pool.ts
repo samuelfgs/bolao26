@@ -180,9 +180,14 @@ export async function updateLiveData() {
     }
   }
 
-  console.log('Cache is stale or empty. Fetching from ESPN...');
+  const now = new Date();
+  const startDate = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0].replace(/-/g, '');
+  const endDate = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0].replace(/-/g, '');
+  const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${startDate}-${endDate}`;
+
+  console.log(`Cache is stale or empty. Fetching from ESPN: ${url}`);
   try {
-    const response = await fetch('https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard');
+    const response = await fetch(url);
 
     if (!response.ok) {
       throw new Error(`API error: ${response.status} ${response.statusText}`);
@@ -204,7 +209,7 @@ export async function updateLiveData() {
     return;
   }
 
-  const events = apiData.events;
+  const events = apiData.events || [];
   console.log(`Found ${events.length} matches in ESPN API. Syncing to database...`);
 
   // Fetch all matches from our DB to match them
@@ -240,6 +245,7 @@ export async function updateLiveData() {
         })
         .where(eq(matches.id, dbMatch.id));
     } else {
+      // Only log if it's not one of our test matches
       console.log(`Match not found in DB: ${homeTeamName} vs ${awayTeamName}`);
     }
   }
@@ -248,15 +254,38 @@ export async function updateLiveData() {
 
   await calculatePoints();
 
-  revalidatePath("/ranking");
-  revalidatePath("/classificacao");
-  revalidatePath("/palpites");
+  try {
+    revalidatePath("/ranking");
+    revalidatePath("/classificacao");
+    revalidatePath("/palpites");
+  } catch (e) {
+    console.log('Path revalidation skipped (likely running outside of Next.js context)');
+  }
 
   console.log('Live data update finished.');
 }
 
 function normalizeName(name: string): string {
-  return name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+  let normalized = name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+  
+  // Map common variations to a canonical form for matching
+  const aliases: Record<string, string> = {
+    "cape verde islands": "cape verde",
+    "cabo verde": "cape verde",
+    "czech republic": "czechia",
+    "republic of ireland": "ireland",
+    "usa": "united states",
+    "dr congo": "congo dr",
+    "ivory coast": "cote d'ivoire",
+    "cote d'ivoire": "cote d'ivoire",
+    "turkiye": "turkey",
+  };
+
+  if (aliases[normalized]) {
+    return aliases[normalized];
+  }
+
+  return normalized;
 }
 
 function mapEspnStatus(espnState: string): "scheduled" | "live" | "finished" {
@@ -331,7 +360,6 @@ export async function getMatchGuesses(poolId: string, matchId: string) {
     userName: users.name,
     homeGuess: guesses.homeGuess,
     awayGuess: guesses.awayGuess,
-    points: guesses.points,
   })
   .from(guesses)
   .innerJoin(users, eq(guesses.userId, users.id))
@@ -340,8 +368,25 @@ export async function getMatchGuesses(poolId: string, matchId: string) {
       eq(guesses.poolId, poolId),
       eq(guesses.matchId, matchId)
     )
-  )
-  .orderBy(desc(guesses.points), users.name);
+  );
 
-  return allGuesses;
+  const mappedGuesses = allGuesses.map(g => {
+    let pts = 0;
+    if (g.homeGuess !== null && g.awayGuess !== null && match.homeScore !== null && match.awayScore !== null) {
+      const exactScore = g.homeGuess === match.homeScore && g.awayGuess === match.awayScore;
+      const guessWinner = g.homeGuess > g.awayGuess ? "home" : g.homeGuess < g.awayGuess ? "away" : "draw";
+      const matchWinner = match.homeScore > match.awayScore ? "home" : match.homeScore < match.awayScore ? "away" : "draw";
+      if (exactScore) pts = 3;
+      else if (guessWinner === matchWinner) pts = 1;
+    }
+    return { ...g, points: pts };
+  });
+
+  // Order by points desc, then user name
+  mappedGuesses.sort((a, b) => {
+    if (b.points !== a.points) return b.points - a.points;
+    return (a.userName || "").localeCompare(b.userName || "");
+  });
+
+  return mappedGuesses;
 }

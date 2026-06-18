@@ -74,9 +74,6 @@ export async function calculatePoints() {
       }
       
       scores[key].totalPoints += points;
-      
-      // Update individual guess points
-      await db.update(guesses).set({ points }).where(eq(guesses.id, guess.id));
     }
   }
 

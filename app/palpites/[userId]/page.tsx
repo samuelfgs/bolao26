@@ -95,6 +95,24 @@ export default async function PalpitesUserPage({
     return match && new Date(match.startTime) <= new Date();
   });
 
+  const visibleGuessesWithPoints = visibleGuesses.map((g: UserGuess) => {
+    const match = matchesById.get(g.matchId);
+    let pts = 0;
+    if (match && g.homeGuess !== null && g.awayGuess !== null && match.homeScore !== null && match.awayScore !== null) {
+      const exactScore = g.homeGuess === match.homeScore && g.awayGuess === match.awayScore;
+      const guessWinner = g.homeGuess > g.awayGuess ? "home" : g.homeGuess < g.awayGuess ? "away" : "draw";
+      const matchWinner = match.homeScore > match.awayScore ? "home" : match.homeScore < match.awayScore ? "away" : "draw";
+      if (exactScore) pts = 3;
+      else if (guessWinner === matchWinner) pts = 1;
+    }
+    return {
+      matchId: g.matchId,
+      homeGuess: g.homeGuess,
+      awayGuess: g.awayGuess,
+      points: pts
+    };
+  });
+
   const [poolMembership] = await db.select({
     campeao: usersToPools.campeao,
     artilheiro: usersToPools.artilheiro,
@@ -129,12 +147,7 @@ export default async function PalpitesUserPage({
         <PalpitesList 
           poolId={poolId} 
           allMatches={allMatches} 
-          initialGuesses={visibleGuesses.map((g: UserGuess) => ({
-            matchId: g.matchId,
-            homeGuess: g.homeGuess,
-            awayGuess: g.awayGuess,
-            points: g.points
-          }))} 
+          initialGuesses={visibleGuessesWithPoints} 
           initialBonus={{
             campeao: poolMembership?.campeao || "",
             artilheiro: poolMembership?.artilheiro || "",
