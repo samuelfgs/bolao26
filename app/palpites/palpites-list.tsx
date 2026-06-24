@@ -173,7 +173,7 @@ export function PalpitesList({
 
       {/* Group Sections */}
       {allGroups.map(groupName => {
-        const currentRound = groupRounds[groupName] || 2;
+        const currentRound = groupRounds[groupName] || 3;
         const groupMatches = allMatches.filter(m => m.group === groupName && m.matchday === currentRound);
         const displayName = groupName?.replace('GROUP_', 'GRUPO ');
 
