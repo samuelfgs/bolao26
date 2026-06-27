@@ -102,8 +102,11 @@ export default async function PalpitesUserPage({
       const exactScore = g.homeGuess === match.homeScore && g.awayGuess === match.awayScore;
       const guessWinner = g.homeGuess > g.awayGuess ? "home" : g.homeGuess < g.awayGuess ? "away" : "draw";
       const matchWinner = match.homeScore > match.awayScore ? "home" : match.homeScore < match.awayScore ? "away" : "draw";
-      if (exactScore) pts = 3;
-      else if (guessWinner === matchWinner) pts = 1;
+      if (exactScore) {
+        pts = match.stage === "group" ? 3 : 5;
+      } else if (guessWinner === matchWinner) {
+        pts = match.stage === "group" ? 1 : 3;
+      }
     }
     return {
       matchId: g.matchId,
@@ -124,8 +127,8 @@ export default async function PalpitesUserPage({
     )
   );
 
-  const [targetUser] = await db.select({ name: users.name, email: users.email }).from(users).where(eq(users.id, targetUserId));
-  const targetUserName = (targetUser?.name || targetUser?.email.split('@')[0] || "").split(' ')[0];
+  const [targetUser] = await db.select({ name: users.name, email: users.email, nickname: users.nickname }).from(users).where(eq(users.id, targetUserId));
+  const targetUserName = targetUser?.nickname || (targetUser?.name || targetUser?.email.split('@')[0] || "").split(' ')[0];
 
   return (
     <div className="min-h-screen bg-gray-50 pb-32 pt-8">

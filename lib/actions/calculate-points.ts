@@ -13,6 +13,10 @@ type UserScore = {
   totalPoints: number;
   totalCravadas: number;
   totalAcertos: number;
+  cravadasFase1: number;
+  cravadasFase2: number;
+  acertosFase1: number;
+  acertosFase2: number;
 };
 
 export async function calculatePoints() {
@@ -44,6 +48,10 @@ export async function calculatePoints() {
         totalPoints: 0,
         totalCravadas: 0,
         totalAcertos: 0,
+        cravadasFase1: 0,
+        cravadasFase2: 0,
+        acertosFase1: 0,
+        acertosFase2: 0,
       };
     }
   }
@@ -64,13 +72,27 @@ export async function calculatePoints() {
       const matchWinner = match.homeScore > match.awayScore ? "home" : match.homeScore < match.awayScore ? "away" : "draw";
       const correctWinner = guessWinner === matchWinner;
 
+      const isGroupStage = match.stage === "group";
+
       let points = 0;
       if (exactScore) {
         scores[key].totalCravadas += 1;
-        points = 3;
+        if (isGroupStage) {
+          scores[key].cravadasFase1 += 1;
+          points = 3;
+        } else {
+          scores[key].cravadasFase2 += 1;
+          points = 5;
+        }
       } else if (correctWinner) {
         scores[key].totalAcertos += 1;
-        points = 1;
+        if (isGroupStage) {
+          scores[key].acertosFase1 += 1;
+          points = 1;
+        } else {
+          scores[key].acertosFase2 += 1;
+          points = 3;
+        }
       }
       
       scores[key].totalPoints += points;
@@ -85,6 +107,10 @@ export async function calculatePoints() {
         totalPoints: score.totalPoints,
         totalCravadas: score.totalCravadas,
         totalAcertos: score.totalAcertos,
+        cravadasFase1: score.cravadasFase1,
+        cravadasFase2: score.cravadasFase2,
+        acertosFase1: score.acertosFase1,
+        acertosFase2: score.acertosFase2,
       })
       .where(and(
         eq(usersToPools.userId, score.userId),
