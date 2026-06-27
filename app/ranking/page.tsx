@@ -27,10 +27,10 @@ export default async function RankingPage() {
       P: usersToPools.totalPoints,
       C: usersToPools.totalCravadas,
       A: usersToPools.totalAcertos,
-      C1: usersToPools.cravadasFase1,
-      C2: usersToPools.cravadasFase2,
-      A1: usersToPools.acertosFase1,
-      A2: usersToPools.acertosFase2,
+      CG: usersToPools.cravadasFase1,
+      CP: usersToPools.cravadasFase2,
+      AG: usersToPools.acertosFase1,
+      AP: usersToPools.acertosFase2,
     })
     .from(users)
     .innerJoin(usersToPools, eq(users.id, usersToPools.userId))
@@ -67,10 +67,10 @@ export default async function RankingPage() {
                   <th className="p-4 sm:p-6 w-12 sm:w-16 text-center">Pos</th>
                   <th className="p-4 sm:p-6">Participante</th>
                   <th className="p-4 sm:p-6 w-16 sm:w-20 text-center">P</th>
-                  <th className="p-4 sm:p-6 w-12 sm:w-16 text-center text-stadium-green-600 hidden md:table-cell">C1</th>
-                  <th className="p-4 sm:p-6 w-12 sm:w-16 text-center text-stadium-green-600 hidden md:table-cell">C2</th>
-                  <th className="p-4 sm:p-6 w-12 sm:w-16 text-center text-stadium-green-600 hidden md:table-cell">A1</th>
-                  <th className="p-4 sm:p-6 w-12 sm:w-16 text-center text-stadium-green-600 hidden md:table-cell">A2</th>
+                  <th className="p-4 sm:p-6 w-12 sm:w-16 text-center text-stadium-green-600 hidden md:table-cell">CG</th>
+                  <th className="p-4 sm:p-6 w-12 sm:w-16 text-center text-stadium-green-600 hidden md:table-cell">CP</th>
+                  <th className="p-4 sm:p-6 w-12 sm:w-16 text-center text-stadium-green-600 hidden md:table-cell">AG</th>
+                  <th className="p-4 sm:p-6 w-12 sm:w-16 text-center text-stadium-green-600 hidden md:table-cell">AP</th>
                 </tr>
               </thead>
               <tbody>
@@ -95,26 +95,26 @@ export default async function RankingPage() {
                       </Link>
                       {/* Mobile stats row */}
                       <div className="md:hidden text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-1 flex flex-wrap gap-x-2 gap-y-0.5">
-                        <span>C1: <strong className="text-gray-600">{player.C1}</strong></span>
-                        <span>C2: <strong className="text-gray-600">{player.C2}</strong></span>
-                        <span>A1: <strong className="text-gray-600">{player.A1}</strong></span>
-                        <span>A2: <strong className="text-gray-600">{player.A2}</strong></span>
+                        <span>CG: <strong className="text-gray-600">{player.CG}</strong></span>
+                        <span>CP: <strong className="text-gray-600">{player.CP}</strong></span>
+                        <span>AG: <strong className="text-gray-600">{player.AG}</strong></span>
+                        <span>AP: <strong className="text-gray-600">{player.AP}</strong></span>
                       </div>
                     </td>
                     <td className="p-4 sm:p-6 text-center font-black text-base sm:text-lg text-stadium-green-900 tabular-nums">
                       {player.P}
                     </td>
                     <td className="p-4 sm:p-6 text-center font-bold text-gray-500 tabular-nums hidden md:table-cell">
-                      {player.C1}
+                      {player.CG}
                     </td>
                     <td className="p-4 sm:p-6 text-center font-bold text-gray-500 tabular-nums hidden md:table-cell">
-                      {player.C2}
+                      {player.CP}
                     </td>
                     <td className="p-4 sm:p-6 text-center font-bold text-gray-500 tabular-nums hidden md:table-cell">
-                      {player.A1}
+                      {player.AG}
                     </td>
                     <td className="p-4 sm:p-6 text-center font-bold text-gray-500 tabular-nums hidden md:table-cell">
-                      {player.A2}
+                      {player.AP}
                     </td>
                   </tr>
                 ))}
@@ -128,26 +128,26 @@ export default async function RankingPage() {
             )}
 
             {/* Legenda */}
-            <div className="bg-gray-50/50 p-4 border-t border-gray-100 flex flex-wrap justify-center gap-6">
+            <div className="bg-gray-50/50 p-6 border-t border-gray-100 flex flex-col gap-3 text-[10px] font-black uppercase tracking-widest text-gray-500">
               <div className="flex items-center gap-2">
                 <span className="w-5 h-5 bg-stadium-green-800 text-white rounded-md flex items-center justify-center text-[10px] font-black">P</span>
-                <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Pontos</span>
+                <span>Pontos</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-5 h-5 border-2 border-stadium-green-600 text-stadium-green-800 rounded-md flex items-center justify-center text-[10px] font-black">C1</span>
-                <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Cravadas Gp</span>
+                <span className="w-5 h-5 border-2 border-stadium-green-600 text-stadium-green-800 rounded-md flex items-center justify-center text-[10px] font-black">CG</span>
+                <span>Cravadas Grupos</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-5 h-5 border-2 border-stadium-green-600 text-stadium-green-800 rounded-md flex items-center justify-center text-[10px] font-black">C2</span>
-                <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Cravadas Play</span>
+                <span className="w-5 h-5 border-2 border-stadium-green-600 text-stadium-green-800 rounded-md flex items-center justify-center text-[10px] font-black">CP</span>
+                <span>Cravadas Playoffs</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-5 h-5 border-2 border-stadium-green-600 text-stadium-green-800 rounded-md flex items-center justify-center text-[10px] font-black">A1</span>
-                <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Acertos Gp</span>
+                <span className="w-5 h-5 border-2 border-stadium-green-600 text-stadium-green-800 rounded-md flex items-center justify-center text-[10px] font-black">AG</span>
+                <span>Acertos Grupos</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-5 h-5 border-2 border-stadium-green-600 text-stadium-green-800 rounded-md flex items-center justify-center text-[10px] font-black">A2</span>
-                <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Acertos Play</span>
+                <span className="w-5 h-5 border-2 border-stadium-green-600 text-stadium-green-800 rounded-md flex items-center justify-center text-[10px] font-black">AP</span>
+                <span>Acertos Playoffs</span>
               </div>
             </div>
           </div>
