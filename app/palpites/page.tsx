@@ -5,6 +5,7 @@ import { and, eq, inArray, type InferSelectModel } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { PalpitesList } from "./palpites-list";
 import { ensureApproved } from "@/lib/actions/auth";
+import { LiveUpdateTrigger } from "@/components/LiveUpdateTrigger";
 
 type Match = InferSelectModel<typeof matches>;
 
@@ -108,6 +109,7 @@ export default async function PalpitesPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-32 pt-8">
       <div className="max-w-4xl mx-auto p-6 md:p-8">
+        <LiveUpdateTrigger />
         <PalpitesList 
           poolId={poolId} 
           allMatches={allMatches} 

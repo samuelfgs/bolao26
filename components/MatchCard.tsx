@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getTeamFlagCode, getTranslatedTeamName } from "@/lib/constants";
+import { getTeamFlagCode, getTranslatedTeamName, getTranslatedStageName } from "@/lib/constants";
 import { getMatchGuesses } from "@/lib/actions/pool";
 import {
   Dialog,
@@ -23,6 +23,7 @@ interface MatchCardProps {
     homeScore: number | null;
     awayScore: number | null;
     status: string;
+    stage: string;
   };
   currentGuess: { home: string | number; away: string | number };
   onGuessChange: (home: string, away: string) => void;
@@ -49,12 +50,23 @@ export function MatchCard({
   isDraft = false,
   trend 
 }: MatchCardProps) {
+  const isMock = match.id.startsWith("mock-");
+  const isHomeReal = !isMock && match.homeTeam && getTeamFlagCode(match.homeTeam) !== "un";
+  const isAwayReal = !isMock && match.awayTeam && getTeamFlagCode(match.awayTeam) !== "un";
+  
+  const homeTeamDisplayName = isHomeReal ? getTranslatedTeamName(match.homeTeam) : "TBD";
+  const awayTeamDisplayName = isAwayReal ? getTranslatedTeamName(match.awayTeam) : "TBD";
+
   const isLive = match.status === 'live';
   const isFinished = match.status === 'finished';
-  const isLocked = isReadOnly || new Date() >= new Date(match.startTime) || isLive || isFinished;
+  const isLocked = isReadOnly || new Date() >= new Date(match.startTime) || isLive || isFinished || !isHomeReal || !isAwayReal;
   const [formattedDate, setFormattedDate] = useState<string>("");
   const [allGuesses, setAllGuesses] = useState<any[]>([]);
   const [loadingGuesses, setLoadingGuesses] = useState(false);
+
+  const mockIndex = isMock ? parseInt(match.id.split("-").pop() || "0") + 1 : 0;
+  const mockLabel = isMock ? (match.stage === "final" ? (mockIndex === 1 ? "Disputa de 3º Lugar" : "Final") : `${getTranslatedStageName(match.stage)} #${mockIndex}`) : "";
+
 
   useEffect(() => {
     setFormattedDate(
@@ -99,6 +111,10 @@ export function MatchCard({
             <span className="flex items-center gap-1 text-red-600 animate-pulse">
               <span className="w-1.5 h-1.5 bg-red-600 rounded-full"></span>
               AO VIVO
+            </span>
+          ) : isMock ? (
+            <span className="text-stadium-green-700 font-black">
+              {mockLabel}
             </span>
           ) : (
             formattedDate && (
@@ -155,16 +171,29 @@ export function MatchCard({
             PENDENTE
           </div>
         )}
+
+        {isLocked && (!isHomeReal || !isAwayReal) && (
+          <div className="px-2 py-0.5 rounded-full font-black text-[9px] bg-gray-100 text-gray-500 flex items-center gap-1 border border-gray-200">
+            <svg className="w-2 h-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            AGUARDANDO TIMES
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-1 sm:gap-2 min-h-[100px]">
         {/* Home Team */}
         <div className="flex flex-col items-center justify-center text-center gap-1.5 min-w-0">
-          <div className="w-10 h-7 sm:w-12 sm:h-8 relative bg-gray-100 rounded-lg overflow-hidden border border-gray-100 shadow-xs">
-            <img src={`https://flagcdn.com/w80/${getTeamFlagCode(match.homeTeam)}.png`} alt={match.homeTeam} className="w-full h-full object-cover" />
+          <div className="w-10 h-7 sm:w-12 sm:h-8 relative bg-gray-100 rounded-lg overflow-hidden border border-gray-100 shadow-xs flex items-center justify-center shrink-0">
+            {isHomeReal ? (
+              <img src={`https://flagcdn.com/w80/${getTeamFlagCode(match.homeTeam)}.png`} alt={match.homeTeam} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-gray-200 text-gray-400 font-black text-xs flex items-center justify-center">?</div>
+            )}
           </div>
           <div className="text-[10px] sm:text-[11px] font-black text-stadium-green-900 leading-tight uppercase tracking-tight truncate w-full px-1">
-            {getTranslatedTeamName(match.homeTeam)}
+            {homeTeamDisplayName}
           </div>
         </div>
         
@@ -233,11 +262,15 @@ export function MatchCard({
 
         {/* Away Team */}
         <div className="flex flex-col items-center justify-center text-center gap-1.5 min-w-0">
-          <div className="w-10 h-7 sm:w-12 sm:h-8 relative bg-gray-100 rounded-lg overflow-hidden border border-gray-100 shadow-xs">
-            <img src={`https://flagcdn.com/w80/${getTeamFlagCode(match.awayTeam)}.png`} alt={match.awayTeam} className="w-full h-full object-cover" />
+          <div className="w-10 h-7 sm:w-12 sm:h-8 relative bg-gray-100 rounded-lg overflow-hidden border border-gray-100 shadow-xs flex items-center justify-center shrink-0">
+            {isAwayReal ? (
+              <img src={`https://flagcdn.com/w80/${getTeamFlagCode(match.awayTeam)}.png`} alt={match.awayTeam} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-gray-200 text-gray-400 font-black text-xs flex items-center justify-center">?</div>
+            )}
           </div>
           <div className="text-[10px] sm:text-[11px] font-black text-stadium-green-900 leading-tight uppercase tracking-tight truncate w-full px-1">
-            {getTranslatedTeamName(match.awayTeam)}
+            {awayTeamDisplayName}
           </div>
         </div>
       </div>

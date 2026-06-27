@@ -48,6 +48,51 @@ export function PalpitesList({
   // Track current round per group
   const [groupRounds, setGroupRounds] = useState<Record<string, number>>({});
 
+  const stages = [
+    { id: "group", name: "Fase de Grupos" },
+    { id: "round_of_32", name: "Round 32" },
+    { id: "round_of_16", name: "Oitavas de Final" },
+    { id: "quarter_finals", name: "Quartas de Final" },
+    { id: "semi_finals", name: "Semi Final" },
+    { id: "final", name: "Final" }
+  ];
+
+  const [activeStageIndex, setActiveStageIndex] = useState(() => {
+    for (let i = 0; i < stages.length; i++) {
+      const stage = stages[i];
+      const stageMatches = allMatches.filter(m => {
+        if (stage.id === "final") {
+          return m.stage === "final" || m.stage === "third_place";
+        }
+        return m.stage === stage.id;
+      });
+
+      if (stageMatches.length > 0) {
+        const allFinished = stageMatches.every(m => m.status === "finished");
+        if (!allFinished) {
+          return i;
+        }
+      } else {
+        return i;
+      }
+    }
+    return stages.length - 1;
+  });
+
+  const activeStage = stages[activeStageIndex];
+
+  const getPlaceholdersCount = (stageId: string) => {
+    switch (stageId) {
+      case "round_of_32": return 16;
+      case "round_of_16": return 8;
+      case "quarter_finals": return 4;
+      case "semi_finals": return 2;
+      case "final": return 2; // Final + Third Place
+      default: return 0;
+    }
+  };
+
+
   const handleGuessChange = (matchId: string, home: string, away: string) => {
     setGuesses(prev => ({
       ...prev,
@@ -171,39 +216,149 @@ export function PalpitesList({
         </div>
       )}
 
-      {/* Group Sections */}
-      {allGroups.map(groupName => {
-        const currentRound = groupRounds[groupName] || 3;
-        const groupMatches = allMatches.filter(m => m.group === groupName && m.matchday === currentRound);
-        const displayName = groupName?.replace('GROUP_', 'GRUPO ');
+      {/* Playoff Stage Switcher */}
+      <div className="flex items-center justify-between bg-white p-4 rounded-3xl shadow-lg border-2 border-stadium-green-600">
+        <button
+          type="button"
+          onClick={() => setActiveStageIndex(prev => Math.max(0, prev - 1))}
+          disabled={activeStageIndex === 0}
+          className="p-2 rounded-xl text-stadium-green-900 hover:bg-stadium-green-50 disabled:opacity-30 disabled:hover:bg-transparent transition-all cursor-pointer disabled:cursor-not-allowed"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
 
-        return (
-          <div key={groupName} className="space-y-8">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b-4 border-stadium-green-600 pb-4">
-              <h2 className="text-3xl font-black text-stadium-green-900 uppercase italic tracking-tighter">
-                {displayName}
-              </h2>
+        <h2 className="text-xl sm:text-2xl font-black text-stadium-green-900 uppercase italic tracking-tighter text-center flex-1">
+          {activeStage.name}
+        </h2>
 
-              <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-xl border border-gray-200 self-start md:self-center">
-                {[1, 2, 3].map((r) => (
-                  <button
-                    key={r}
-                    onClick={() => setGroupRounds(prev => ({ ...prev, [groupName]: r }))}
-                    className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
-                      currentRound === r 
-                        ? "bg-stadium-green-600 text-white shadow-md scale-105" 
-                        : "text-gray-400 hover:bg-gray-50"
-                    }`}
-                  >
-                    R{r}
-                  </button>
-                ))}
+        <button
+          type="button"
+          onClick={() => setActiveStageIndex(prev => Math.min(stages.length - 1, prev + 1))}
+          disabled={activeStageIndex === stages.length - 1}
+          className="p-2 rounded-xl text-stadium-green-900 hover:bg-stadium-green-50 disabled:opacity-30 disabled:hover:bg-transparent transition-all cursor-pointer disabled:cursor-not-allowed"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Main Content */}
+      {activeStage.id === "group" ? (
+        /* Group Sections */
+        allGroups.map(groupName => {
+          const currentRound = groupRounds[groupName] || 3;
+          const groupMatches = allMatches.filter(m => m.group === groupName && m.matchday === currentRound);
+          const displayName = groupName?.replace('GROUP_', 'GRUPO ');
+
+          return (
+            <div key={groupName} className="space-y-8">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b-4 border-stadium-green-600 pb-4">
+                <h2 className="text-3xl font-black text-stadium-green-900 uppercase italic tracking-tighter">
+                  {displayName}
+                </h2>
+
+                <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-xl border border-gray-200 self-start md:self-center">
+                  {[1, 2, 3].map((r) => (
+                    <button
+                      key={r}
+                      onClick={() => setGroupRounds(prev => ({ ...prev, [groupName]: r }))}
+                      className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                        currentRound === r 
+                          ? "bg-stadium-green-600 text-white shadow-md scale-105" 
+                          : "text-gray-400 hover:bg-gray-50"
+                      }`}
+                    >
+                      R{r}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {groupMatches.length > 0 ? (
+              {groupMatches.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {groupMatches.map((match) => (
+                    <MatchCard
+                      key={match.id}
+                      poolId={poolId}
+                      match={match}
+                      currentGuess={guesses[match.id] || { home: "", away: "" }}
+                      onGuessChange={(home, away) => handleGuessChange(match.id, home, away)}
+                      isReadOnly={isReadOnly}
+                      trend={communityTrends[match.id]}
+                      points={guesses[match.id]?.points}
+                      isSaved={
+                        (() => {
+                          const initial = initialGuesses.find(ig => ig.matchId === match.id);
+                          const currentHome = guesses[match.id]?.home?.toString() ?? "";
+                          const currentAway = guesses[match.id]?.away?.toString() ?? "";
+                          const savedHome = initial?.homeGuess?.toString() ?? "";
+                          const savedAway = initial?.awayGuess?.toString() ?? "";
+                          
+                          return (
+                            currentHome !== "" && 
+                            currentAway !== "" && 
+                            currentHome === savedHome &&
+                            currentAway === savedAway
+                          );
+                        })()
+                      }
+                      isDraft={
+                        (() => {
+                          const initial = initialGuesses.find(ig => ig.matchId === match.id);
+                          const currentHome = guesses[match.id]?.home?.toString() ?? "";
+                          const currentAway = guesses[match.id]?.away?.toString() ?? "";
+                          const savedHome = initial?.homeGuess?.toString() ?? "";
+                          const savedAway = initial?.awayGuess?.toString() ?? "";
+                          
+                          // If current input is empty, it's not a draft (it's pending)
+                          if (currentHome === "" && currentAway === "") return false;
+                          
+                          // It's a draft if it differs from what's saved
+                          return currentHome !== savedHome || currentAway !== savedAway;
+                        })()
+                      }
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-white p-12 rounded-3xl border-2 border-dashed border-gray-200 text-center">
+                  <p className="text-gray-400 font-black uppercase italic text-xs">Nenhuma partida para a Rodada {currentRound} do {displayName}</p>
+                </div>
+              )}
+            </div>
+          );
+        })
+      ) : (
+        /* Playoff Stage Sections */
+        (() => {
+          const activePlayoffMatches = allMatches.filter(m => {
+            if (activeStage.id === "final") {
+              return m.stage === "final" || m.stage === "third_place";
+            }
+            return m.stage === activeStage.id;
+          });
+
+          const displayMatches = activePlayoffMatches.length > 0 
+            ? activePlayoffMatches 
+            : Array.from({ length: getPlaceholdersCount(activeStage.id) }).map((_, i) => ({
+                id: `mock-${activeStage.id}-${i}`,
+                apiId: null,
+                homeTeam: "TBD",
+                awayTeam: "TBD",
+                startTime: new Date("2026-06-30T15:00:00Z"),
+                homeScore: null,
+                awayScore: null,
+                status: "scheduled" as const,
+                stage: activeStage.id as any,
+              }));
+
+          return (
+            <div className="animate-in fade-in duration-300">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {groupMatches.map((match) => (
+                {displayMatches.map((match) => (
                   <MatchCard
                     key={match.id}
                     poolId={poolId}
@@ -247,14 +402,10 @@ export function PalpitesList({
                   />
                 ))}
               </div>
-            ) : (
-              <div className="bg-white p-12 rounded-3xl border-2 border-dashed border-gray-200 text-center">
-                <p className="text-gray-400 font-black uppercase italic text-xs">Nenhuma partida para a Rodada {currentRound} do {displayName}</p>
-              </div>
-            )}
-          </div>
-        );
-      })}
+            </div>
+          );
+        })()
+      )}
 
       {/* Batch Save Button */}
       {!isReadOnly && hasChanges && (

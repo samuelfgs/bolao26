@@ -164,6 +164,27 @@ export async function saveAllGuesses(
   revalidatePath("/palpites");
 }
 
+function mapSeasonTypeToStage(seasonType: number): "group" | "round_of_32" | "round_of_16" | "quarter_finals" | "semi_finals" | "third_place" | "final" {
+  switch (seasonType) {
+    case 13802:
+      return "group";
+    case 13801:
+      return "round_of_32";
+    case 13800:
+      return "round_of_16";
+    case 13799:
+      return "quarter_finals";
+    case 13798:
+      return "semi_finals";
+    case 13797:
+      return "third_place";
+    case 13803:
+      return "final";
+    default:
+      return "group";
+  }
+}
+
 export async function updateLiveData() {
   console.log('Starting live data update from ESPN...');
 
@@ -180,10 +201,8 @@ export async function updateLiveData() {
     }
   }
 
-  const now = new Date();
-  const startDate = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0].replace(/-/g, '');
-  const endDate = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0].replace(/-/g, '');
-  const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${startDate}-${endDate}`;
+  // Sync the entire tournament range to automatically discover playoff matches and team updates
+  const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=20260611-20260720&limit=200`;
 
   console.log(`Cache is stale or empty. Fetching from ESPN: ${url}`);
   try {
@@ -228,25 +247,39 @@ export async function updateLiveData() {
     const awayScore = parseInt(awayCompetitor.score);
     const status = mapEspnStatus(event.status.type.state);
     const startTime = new Date(event.date);
+    const apiId = parseInt(event.id);
+    const stage = mapSeasonTypeToStage(event.season?.type);
 
-    // Find the match in our DB by team names
+    // Find the match in our DB by API ID first, fallback to team names if API ID is null (e.g. for manually seeded test matches)
     const dbMatch = dbMatches.find((m: Match) => 
-      normalizeName(m.homeTeam) === normalizeName(homeTeamName) && 
-      normalizeName(m.awayTeam) === normalizeName(awayTeamName)
+      (m.apiId !== null && m.apiId === apiId) ||
+      (m.apiId === null && normalizeName(m.homeTeam) === normalizeName(homeTeamName) && normalizeName(m.awayTeam) === normalizeName(awayTeamName))
     );
 
     if (dbMatch) {
       await db.update(matches)
         .set({
+          homeTeam: homeTeamName,
+          awayTeam: awayTeamName,
           homeScore: isNaN(homeScore) ? null : homeScore,
           awayScore: isNaN(awayScore) ? null : awayScore,
           status: status,
-          startTime: startTime, // Sync start time just in case
+          startTime: startTime,
+          stage: stage,
         })
         .where(eq(matches.id, dbMatch.id));
     } else {
-      // Only log if it's not one of our test matches
-      console.log(`Match not found in DB: ${homeTeamName} vs ${awayTeamName}`);
+      console.log(`New match from API: ${homeTeamName} vs ${awayTeamName} (${stage}). Inserting...`);
+      await db.insert(matches).values({
+        apiId: apiId,
+        homeTeam: homeTeamName,
+        awayTeam: awayTeamName,
+        homeScore: isNaN(homeScore) ? null : homeScore,
+        awayScore: isNaN(awayScore) ? null : awayScore,
+        status: status,
+        startTime: startTime,
+        stage: stage,
+      });
     }
   }
 

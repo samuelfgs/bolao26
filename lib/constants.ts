@@ -75,3 +75,17 @@ export function getTeamFlagCode(name: string): string {
   const trimmed = name.trim();
   return flagCodeMap[trimmed] || "un";
 }
+
+export function getTranslatedStageName(stage: string): string {
+  switch (stage) {
+    case "group": return "Fase de Grupos";
+    case "round_of_32": return "Round 32";
+    case "round_of_16": return "Oitavas de Final";
+    case "quarter_finals": return "Quartas de Final";
+    case "semi_finals": return "Semifinal";
+    case "third_place": return "Disputa de 3º Lugar";
+    case "final": return "Final";
+    default: return stage;
+  }
+}
+
