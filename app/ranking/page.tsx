@@ -64,19 +64,19 @@ export default async function RankingPage() {
             <table className="w-full text-left">
               <thead>
                 <tr className="text-[10px] uppercase font-black text-gray-400 border-b border-gray-50 bg-gray-50/50">
-                  <th className="p-6 w-16 text-center">Pos</th>
-                  <th className="p-6">Participante</th>
-                  <th className="p-6 w-20 text-center">P</th>
-                  <th className="p-6 w-16 text-center text-stadium-green-600">C1</th>
-                  <th className="p-6 w-16 text-center text-stadium-green-600">C2</th>
-                  <th className="p-6 w-16 text-center text-stadium-green-600">A1</th>
-                  <th className="p-6 w-16 text-center text-stadium-green-600">A2</th>
+                  <th className="p-4 sm:p-6 w-12 sm:w-16 text-center">Pos</th>
+                  <th className="p-4 sm:p-6">Participante</th>
+                  <th className="p-4 sm:p-6 w-16 sm:w-20 text-center">P</th>
+                  <th className="p-4 sm:p-6 w-12 sm:w-16 text-center text-stadium-green-600 hidden md:table-cell">C1</th>
+                  <th className="p-4 sm:p-6 w-12 sm:w-16 text-center text-stadium-green-600 hidden md:table-cell">C2</th>
+                  <th className="p-4 sm:p-6 w-12 sm:w-16 text-center text-stadium-green-600 hidden md:table-cell">A1</th>
+                  <th className="p-4 sm:p-6 w-12 sm:w-16 text-center text-stadium-green-600 hidden md:table-cell">A2</th>
                 </tr>
               </thead>
               <tbody>
                 {leaderboard.map((player: LeaderboardPlayer, idx: number) => (
                   <tr key={player.id} className="border-b border-gray-50 last:border-0 hover:bg-stadium-green-50 transition-colors group text-sm">
-                    <td className="p-6 text-center">
+                    <td className="p-4 sm:p-6 text-center">
                       <span className={`inline-flex items-center justify-center w-8 h-8 rounded-xl text-sm font-black ${
                         idx === 0 ? 'bg-stadium-yellow text-stadium-green-900 ring-4 ring-stadium-yellow/20' : 
                         idx === 1 ? 'bg-gray-200 text-gray-700' :
@@ -86,27 +86,34 @@ export default async function RankingPage() {
                         {idx + 1}
                       </span>
                     </td>
-                    <td className="p-6">
+                    <td className="p-4 sm:p-6">
                       <Link 
                         href={player.id === user.id ? `/palpites` : `/palpites/${player.id}`}
                         className="font-black text-stadium-green-900 uppercase tracking-tight hover:text-stadium-green-600 transition-colors"
                       >
                         {player.nickname || (player.name || player.email!.split('@')[0]).split(' ')[0]}
                       </Link>
+                      {/* Mobile stats row */}
+                      <div className="md:hidden text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-1 flex flex-wrap gap-x-2 gap-y-0.5">
+                        <span>C1: <strong className="text-gray-600">{player.C1}</strong></span>
+                        <span>C2: <strong className="text-gray-600">{player.C2}</strong></span>
+                        <span>A1: <strong className="text-gray-600">{player.A1}</strong></span>
+                        <span>A2: <strong className="text-gray-600">{player.A2}</strong></span>
+                      </div>
                     </td>
-                    <td className="p-6 text-center font-black text-lg text-stadium-green-900 tabular-nums">
+                    <td className="p-4 sm:p-6 text-center font-black text-base sm:text-lg text-stadium-green-900 tabular-nums">
                       {player.P}
                     </td>
-                    <td className="p-6 text-center font-bold text-gray-500 tabular-nums">
+                    <td className="p-4 sm:p-6 text-center font-bold text-gray-500 tabular-nums hidden md:table-cell">
                       {player.C1}
                     </td>
-                    <td className="p-6 text-center font-bold text-gray-500 tabular-nums">
+                    <td className="p-4 sm:p-6 text-center font-bold text-gray-500 tabular-nums hidden md:table-cell">
                       {player.C2}
                     </td>
-                    <td className="p-6 text-center font-bold text-gray-500 tabular-nums">
+                    <td className="p-4 sm:p-6 text-center font-bold text-gray-500 tabular-nums hidden md:table-cell">
                       {player.A1}
                     </td>
-                    <td className="p-6 text-center font-bold text-gray-500 tabular-nums">
+                    <td className="p-4 sm:p-6 text-center font-bold text-gray-500 tabular-nums hidden md:table-cell">
                       {player.A2}
                     </td>
                   </tr>
