@@ -61,6 +61,7 @@ export function PalpitesList({
     for (let i = 0; i < stages.length; i++) {
       const stage = stages[i];
       const stageMatches = allMatches.filter(m => {
+        if (m.apiId === null) return false; // Ignore manually-seeded test matches in staging logic
         if (stage.id === "final") {
           return m.stage === "final" || m.stage === "third_place";
         }
