@@ -391,7 +391,7 @@ export function MatchCard({
                                 ? 'text-yellow-900' 
                                 : 'text-red-900'
                           }`}>
-                            {(g.userName || "Usuário").split(' ')[0]}
+                            {g.userNickname || (g.userName || "Usuário").split(' ')[0]}
                           </span>
                           <div className="flex items-center gap-2 shrink-0">
                              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 shrink-0 ${

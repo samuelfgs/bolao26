@@ -22,6 +22,7 @@ export async function getPendingApprovals() {
     userId: usersToPools.userId,
     poolId: usersToPools.poolId,
     userName: users.name,
+    userNickname: users.nickname,
     userEmail: users.email,
     userPhone: users.phone,
     status: usersToPools.status,

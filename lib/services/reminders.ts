@@ -36,6 +36,7 @@ export async function sendMatchReminders() {
     const pendingUsers = await db.select({
       userId: users.id,
       userName: users.name,
+      userNickname: users.nickname,
       phone: users.phone,
     })
     .from(users)
@@ -67,10 +68,10 @@ export async function sendMatchReminders() {
     for (const user of uniqueUsers) {
       if (!user.phone) continue;
 
-      const firstName = (user.userName || 'Craque').split(' ')[0];
+      const firstName = user.userNickname || (user.userName || 'Craque').split(' ')[0];
       const message = `⚠️ *LEMBRETE DE PALPITE*\n\nFala, *${firstName}*! ⚽\n\nA partida *${match.homeTeam} x ${match.awayTeam}* começa em 30 minutos e você ainda não enviou seu palpite!\n\nCorre lá e não perca esses pontos: ${process.env.NEXT_PUBLIC_APP_URL || 'https://bolao26-nine.vercel.app'}/palpites`;
 
-      console.log(`Sending reminder to ${user.userName} (${user.phone}) for match ${match.id}`);
+      console.log(`Sending reminder to ${user.userNickname || user.userName} (${user.phone}) for match ${match.id}`);
       
       const result = await sendWhatsAppMessage(user.phone, message);
 
