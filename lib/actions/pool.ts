@@ -250,11 +250,14 @@ export async function updateLiveData() {
     const apiId = parseInt(event.id);
     const stage = mapSeasonTypeToStage(event.season?.type);
 
-    // Find the match in our DB by API ID first, fallback to team names if API ID is null (e.g. for manually seeded test matches)
-    const dbMatch = dbMatches.find((m: Match) => 
-      (m.apiId !== null && m.apiId === apiId) ||
-      (m.apiId === null && normalizeName(m.homeTeam) === normalizeName(homeTeamName) && normalizeName(m.awayTeam) === normalizeName(awayTeamName))
-    );
+    const isGroupStage = stage === "group";
+    const dbMatch = isGroupStage
+      ? dbMatches.find((m: Match) => 
+          m.stage === "group" &&
+          normalizeName(m.homeTeam) === normalizeName(homeTeamName) && 
+          normalizeName(m.awayTeam) === normalizeName(awayTeamName)
+        )
+      : dbMatches.find((m: Match) => m.apiId === apiId);
 
     if (dbMatch) {
       await db.update(matches)
@@ -391,6 +394,7 @@ export async function getMatchGuesses(poolId: string, matchId: string) {
 
   const allGuesses = await db.select({
     userName: users.name,
+    userNickname: users.nickname,
     homeGuess: guesses.homeGuess,
     awayGuess: guesses.awayGuess,
   })
@@ -403,7 +407,7 @@ export async function getMatchGuesses(poolId: string, matchId: string) {
     )
   );
 
-  const mappedGuesses = allGuesses.map((g: { userName: string | null; homeGuess: number | null; awayGuess: number | null }) => {
+  const mappedGuesses = allGuesses.map((g: { userName: string | null; userNickname: string | null; homeGuess: number | null; awayGuess: number | null }) => {
     let pts = 0;
     if (g.homeGuess !== null && g.awayGuess !== null && match.homeScore !== null && match.awayScore !== null) {
       const exactScore = g.homeGuess === match.homeScore && g.awayGuess === match.awayScore;
@@ -417,15 +421,18 @@ export async function getMatchGuesses(poolId: string, matchId: string) {
 
   interface MappedGuess {
     userName: string | null;
+    userNickname: string | null;
     homeGuess: number | null;
     awayGuess: number | null;
     points: number;
   }
 
-  // Order by points desc, then user name
+  // Order by points desc, then user name/nickname
   mappedGuesses.sort((a: MappedGuess, b: MappedGuess) => {
     if (b.points !== a.points) return b.points - a.points;
-    return (a.userName || "").localeCompare(b.userName || "");
+    const aName = a.userNickname || a.userName || "";
+    const bName = b.userNickname || b.userName || "";
+    return aName.localeCompare(bName);
   });
 
   return mappedGuesses;
