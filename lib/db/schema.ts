@@ -43,6 +43,7 @@ export const usersToPools = pgTable("users_to_pools", {
   cravadasFase2: integer("cravadas_fase2").default(0).notNull(),
   acertosFase1: integer("acertos_fase1").default(0).notNull(),
   acertosFase2: integer("acertos_fase2").default(0).notNull(),
+  yellowCards: integer("yellow_cards").default(0).notNull(),
   campeao: text("campeao"),
   artilheiro: text("artilheiro"),
   craque: text("craque"),

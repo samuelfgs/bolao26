@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { users, usersToPools } from "@/lib/db/schema";
 import { createClient } from "@/lib/supabase/server";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, asc } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { ensureApproved } from "@/lib/actions/auth";
 import Link from "next/link";
@@ -31,6 +31,7 @@ export default async function RankingPage() {
       CP: usersToPools.cravadasFase2,
       AG: usersToPools.acertosFase1,
       AP: usersToPools.acertosFase2,
+      CA: usersToPools.yellowCards,
     })
     .from(users)
     .innerJoin(usersToPools, eq(users.id, usersToPools.userId))
@@ -38,6 +39,7 @@ export default async function RankingPage() {
     .orderBy(
       desc(usersToPools.totalPoints), 
       desc(usersToPools.totalCravadas),
+      asc(usersToPools.yellowCards),
       users.name
     );
 
@@ -71,6 +73,7 @@ export default async function RankingPage() {
                   <th className="p-4 sm:p-6 w-12 sm:w-16 text-center text-stadium-green-600 hidden md:table-cell">CP</th>
                   <th className="p-4 sm:p-6 w-12 sm:w-16 text-center text-stadium-green-600 hidden md:table-cell">AG</th>
                   <th className="p-4 sm:p-6 w-12 sm:w-16 text-center text-stadium-green-600 hidden md:table-cell">AP</th>
+                  <th className="p-4 sm:p-6 w-12 sm:w-16 text-center text-amber-500 hidden md:table-cell">CA</th>
                 </tr>
               </thead>
               <tbody>
@@ -99,6 +102,7 @@ export default async function RankingPage() {
                         <span>CP: <strong className="text-gray-600">{player.CP}</strong></span>
                         <span>AG: <strong className="text-gray-600">{player.AG}</strong></span>
                         <span>AP: <strong className="text-gray-600">{player.AP}</strong></span>
+                        <span>CA: <strong className="text-amber-500">{player.CA}</strong></span>
                       </div>
                     </td>
                     <td className="p-4 sm:p-6 text-center font-black text-base sm:text-lg text-stadium-green-900 tabular-nums">
@@ -115,6 +119,9 @@ export default async function RankingPage() {
                     </td>
                     <td className="p-4 sm:p-6 text-center font-bold text-gray-500 tabular-nums hidden md:table-cell">
                       {player.AP}
+                    </td>
+                    <td className="p-4 sm:p-6 text-center font-bold text-amber-500 tabular-nums hidden md:table-cell">
+                      {player.CA}
                     </td>
                   </tr>
                 ))}
@@ -148,6 +155,10 @@ export default async function RankingPage() {
               <div className="flex items-center gap-2">
                 <span className="w-5 h-5 border-2 border-stadium-green-600 text-stadium-green-800 rounded-md flex items-center justify-center text-[10px] font-black">AP</span>
                 <span>Acertos Playoffs</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-5 h-5 bg-amber-500 text-white rounded-md flex items-center justify-center text-[10px] font-black">CA</span>
+                <span>Cartões Amarelos (Menos é melhor)</span>
               </div>
             </div>
           </div>
