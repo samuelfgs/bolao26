@@ -66,13 +66,13 @@ export function MatchCard({
 
   const isGroupStage = match.stage === "group";
 
-  const getPointsStyle = (pts: number | null | undefined) => {
-    if (pts === null || pts === undefined) {
+  const getPointsStyle = (pts: number | null | undefined, hasGuess: boolean) => {
+    if (!hasGuess || pts === null || pts === undefined) {
       return {
         badgeBg: "bg-gray-200 text-gray-400",
         badgeDot: "bg-gray-400",
-        bottomBg: "bg-stadium-green-50 border-stadium-green-100",
-        bottomText: "text-stadium-green-800",
+        bottomBg: "bg-gray-50 border-gray-100",
+        bottomText: "text-gray-500",
         dialogBg: "bg-gray-50 border-gray-100",
         dialogText: "text-gray-500",
         dialogScoreBorder: "border-gray-200",
@@ -115,7 +115,15 @@ export function MatchCard({
     }
   };
 
-  const ptsStyle = getPointsStyle(points);
+  const hasGuess = currentGuess && 
+                   currentGuess.home !== "" && 
+                   currentGuess.home !== null && 
+                   currentGuess.home !== undefined &&
+                   currentGuess.away !== "" && 
+                   currentGuess.away !== null && 
+                   currentGuess.away !== undefined;
+
+  const ptsStyle = getPointsStyle(points, hasGuess);
 
   const mockIndex = isMock ? parseInt(match.id.split("-").pop() || "0") + 1 : 0;
   const mockLabel = isMock ? (match.stage === "final" ? (mockIndex === 1 ? "Disputa de 3º Lugar" : "Final") : `${getTranslatedStageName(match.stage)} #${mockIndex}`) : "";
@@ -404,7 +412,8 @@ export function MatchCard({
                   ) : (
                     <div className="space-y-2 py-4 w-full min-w-0">
                       {allGuesses.length > 0 ? allGuesses.map((g, i) => {
-                        const gStyle = getPointsStyle(g.points);
+                        const hasUserGuess = g.homeGuess !== null && g.homeGuess !== undefined && g.awayGuess !== null && g.awayGuess !== undefined;
+                        const gStyle = getPointsStyle(g.points, hasUserGuess);
                         return (
                           <div key={i} className={`grid grid-cols-[1fr_auto] items-center p-3 rounded-2xl border gap-4 w-full min-w-0 ${gStyle.dialogBg}`}>
                             <span className={`text-xs font-black uppercase truncate min-w-0 block ${gStyle.dialogText}`}>
