@@ -413,8 +413,13 @@ export async function getMatchGuesses(poolId: string, matchId: string) {
       const exactScore = g.homeGuess === match.homeScore && g.awayGuess === match.awayScore;
       const guessWinner = g.homeGuess > g.awayGuess ? "home" : g.homeGuess < g.awayGuess ? "away" : "draw";
       const matchWinner = match.homeScore > match.awayScore ? "home" : match.homeScore < match.awayScore ? "away" : "draw";
-      if (exactScore) pts = 3;
-      else if (guessWinner === matchWinner) pts = 1;
+      
+      const isGroupStage = match.stage === "group";
+      if (exactScore) {
+        pts = isGroupStage ? 3 : 5;
+      } else if (guessWinner === matchWinner) {
+        pts = isGroupStage ? 1 : 3;
+      }
     }
     return { ...g, points: pts };
   });

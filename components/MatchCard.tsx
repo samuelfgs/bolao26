@@ -64,6 +64,59 @@ export function MatchCard({
   const [allGuesses, setAllGuesses] = useState<any[]>([]);
   const [loadingGuesses, setLoadingGuesses] = useState(false);
 
+  const isGroupStage = match.stage === "group";
+
+  const getPointsStyle = (pts: number | null | undefined) => {
+    if (pts === null || pts === undefined) {
+      return {
+        badgeBg: "bg-gray-200 text-gray-400",
+        badgeDot: "bg-gray-400",
+        bottomBg: "bg-stadium-green-50 border-stadium-green-100",
+        bottomText: "text-stadium-green-800",
+        dialogBg: "bg-gray-50 border-gray-100",
+        dialogText: "text-gray-500",
+        dialogScoreBorder: "border-gray-200",
+      };
+    }
+
+    const isExact = isGroupStage ? pts === 3 : pts === 5;
+    const isWinner = isGroupStage ? pts === 1 : pts === 3;
+
+    if (isExact) {
+      return {
+        badgeBg: "bg-green-100 text-green-800",
+        badgeDot: "bg-green-800",
+        bottomBg: "bg-green-50 border-green-100",
+        bottomText: "text-green-800",
+        dialogBg: "bg-green-100 border-green-200",
+        dialogText: "text-green-900",
+        dialogScoreBorder: "border-green-200",
+      };
+    } else if (isWinner) {
+      return {
+        badgeBg: "bg-yellow-100 text-yellow-800",
+        badgeDot: "bg-yellow-800",
+        bottomBg: "bg-yellow-50 border-yellow-100",
+        bottomText: "text-yellow-800",
+        dialogBg: "bg-yellow-100 border-yellow-200",
+        dialogText: "text-yellow-900",
+        dialogScoreBorder: "border-yellow-200",
+      };
+    } else { // wrong
+      return {
+        badgeBg: "bg-red-100 text-red-700",
+        badgeDot: "bg-red-700",
+        bottomBg: "bg-red-50 border-red-100",
+        bottomText: "text-red-700",
+        dialogBg: "bg-red-50 border-red-100",
+        dialogText: "text-red-900",
+        dialogScoreBorder: "border-red-100",
+      };
+    }
+  };
+
+  const ptsStyle = getPointsStyle(points);
+
   const mockIndex = isMock ? parseInt(match.id.split("-").pop() || "0") + 1 : 0;
   const mockLabel = isMock ? (match.stage === "final" ? (mockIndex === 1 ? "Disputa de 3º Lugar" : "Final") : `${getTranslatedStageName(match.stage)} #${mockIndex}`) : "";
 
@@ -129,18 +182,8 @@ export function MatchCard({
         </div>
 
         {points !== undefined && points !== null && isLocked && (
-          <div className={`px-2 py-0.5 rounded-full font-black text-[9px] flex items-center gap-1 ${
-            points === 3
-              ? 'bg-green-100 text-green-800'
-              : points === 1
-                ? 'bg-yellow-100 text-yellow-800'
-                : points === 0
-                  ? 'bg-red-100 text-red-700'
-                  : 'bg-gray-200 text-gray-400'
-          }`}>
-            {isLive && <span className={`w-1 h-1 rounded-full animate-pulse ${
-              points === 3 ? 'bg-green-800' : points === 1 ? 'bg-yellow-800' : 'bg-red-700'
-            }`}></span>}
+          <div className={`px-2 py-0.5 rounded-full font-black text-[9px] flex items-center gap-1 ${ptsStyle.badgeBg}`}>
+            {isLive && <span className={`w-1 h-1 rounded-full animate-pulse ${ptsStyle.badgeDot}`}></span>}
             {points} {points === 1 ? 'PONTO' : 'PONTOS'} {isLive && '(LIVE)'}
           </div>
         )}
@@ -276,24 +319,8 @@ export function MatchCard({
       </div>
       
       {(isLive || isFinished) && match.homeScore !== null && (
-        <div className={`p-2 rounded-xl border ${
-          points === 3
-            ? 'bg-green-50 border-green-100'
-            : points === 1
-              ? 'bg-yellow-50 border-yellow-100'
-              : points === 0
-                ? 'bg-red-50 border-red-100'
-                : 'bg-stadium-green-50 border-stadium-green-100'
-        }`}>
-          <p className={`text-[9px] font-black uppercase tracking-widest text-center ${
-            points === 3
-              ? 'text-green-800'
-              : points === 1
-                ? 'text-yellow-800'
-                : points === 0
-                  ? 'text-red-700'
-                  : 'text-stadium-green-800'
-          }`}>
+        <div className={`p-2 rounded-xl border ${ptsStyle.bottomBg}`}>
+          <p className={`text-[9px] font-black uppercase tracking-widest text-center ${ptsStyle.bottomText}`}>
             {isLive ? 'Placar ao Vivo:' : 'Placar Final:'} <span className="text-xs ml-1">{match.homeScore ?? "0"} x {match.awayScore ?? "0"}</span>
           </p>
         </div>
@@ -376,38 +403,23 @@ export function MatchCard({
                     </div>
                   ) : (
                     <div className="space-y-2 py-4 w-full min-w-0">
-                      {allGuesses.length > 0 ? allGuesses.map((g, i) => (
-                        <div key={i} className={`grid grid-cols-[1fr_auto] items-center p-3 rounded-2xl border gap-4 w-full min-w-0 ${
-                          g.points === 3 
-                            ? 'bg-green-100 border-green-200' 
-                            : g.points === 1 
-                              ? 'bg-yellow-100 border-yellow-200' 
-                              : 'bg-red-50 border-red-100'
-                        }`}>
-                          <span className={`text-xs font-black uppercase truncate min-w-0 block ${
-                            g.points === 3 
-                              ? 'text-green-900' 
-                              : g.points === 1 
-                                ? 'text-yellow-900' 
-                                : 'text-red-900'
-                          }`}>
-                            {g.userNickname || (g.userName || "Usuário").split(' ')[0]}
-                          </span>
-                          <div className="flex items-center gap-2 shrink-0">
-                             <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 shrink-0 ${
-                               g.points === 3 
-                                 ? 'bg-white border-green-200' 
-                                 : g.points === 1 
-                                   ? 'bg-white border-yellow-200' 
-                                   : 'bg-white border-red-100'
-                             }`}>
-                                <span className="text-sm font-black text-stadium-green-800">{g.homeGuess}</span>
-                                <span className="text-[10px] font-black text-gray-300">X</span>
-                                <span className="text-sm font-black text-stadium-green-800">{g.awayGuess}</span>
-                             </div>
+                      {allGuesses.length > 0 ? allGuesses.map((g, i) => {
+                        const gStyle = getPointsStyle(g.points);
+                        return (
+                          <div key={i} className={`grid grid-cols-[1fr_auto] items-center p-3 rounded-2xl border gap-4 w-full min-w-0 ${gStyle.dialogBg}`}>
+                            <span className={`text-xs font-black uppercase truncate min-w-0 block ${gStyle.dialogText}`}>
+                              {g.userNickname || (g.userName || "Usuário").split(' ')[0]}
+                            </span>
+                            <div className="flex items-center gap-2 shrink-0">
+                               <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 shrink-0 bg-white ${gStyle.dialogScoreBorder}`}>
+                                  <span className="text-sm font-black text-stadium-green-800">{g.homeGuess}</span>
+                                  <span className="text-[10px] font-black text-gray-300">X</span>
+                                  <span className="text-sm font-black text-stadium-green-800">{g.awayGuess}</span>
+                               </div>
+                            </div>
                           </div>
-                        </div>
-                      )) : (
+                        );
+                      }) : (
                         <p className="text-center py-8 text-xs font-medium text-gray-400">Nenhum palpite registrado para este jogo.</p>
                       )}
                     </div>
