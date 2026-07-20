@@ -7,6 +7,37 @@ import { ensureApproved } from "@/lib/actions/auth";
 import Link from "next/link";
 import { LiveUpdateTrigger } from "@/components/LiveUpdateTrigger";
 
+function normalizeChampion(val: string | null) {
+  if (!val) return "";
+  const normalized = val.trim().toLowerCase();
+  if (normalized.includes("brasil")) return "Brasil";
+  if (normalized.includes("espanha")) return "Espanha";
+  if (normalized.includes("fran")) return "França";
+  if (normalized.includes("portugal")) return "Portugal";
+  if (normalized.includes("alemanha")) return "Alemanha";
+  if (normalized.includes("inglaterra")) return "Inglaterra";
+  return val;
+}
+
+function normalizePlayer(val: string | null) {
+  if (!val) return "";
+  const normalized = val.trim().toLowerCase();
+  if (normalized.includes("mbap") || normalized.includes("mpab")) return "Kylian Mbappé";
+  if (normalized.includes("kane")) return "Harry Kane";
+  if (normalized.includes("ney")) return "Neymar";
+  if (normalized.includes("messi")) return "Lionel Messi";
+  if (normalized.includes("yamal")) return "Lamine Yamal";
+  if (normalized.includes("oyarzabal")) return "Mikel Oyarzabal";
+  if (normalized.includes("dembe")) return "Ousmane Dembélé";
+  if (normalized.includes("alvarez")) return "Julián Álvarez";
+  if (normalized.includes("ronaldo") || normalized.includes("cr7")) return "Cristiano Ronaldo";
+  if (normalized.includes("olise")) return "Michael Olise";
+  if (normalized.includes("vitinha")) return "Vitinha";
+  if (normalized.includes("endrick")) return "Endrick";
+  if (normalized.includes("rodri")) return "Rodri";
+  return val;
+}
+
 export default async function RankingPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -32,6 +63,9 @@ export default async function RankingPage() {
       AG: usersToPools.acertosFase1,
       AP: usersToPools.acertosFase2,
       CA: usersToPools.yellowCards,
+      campeao: usersToPools.campeao,
+      artilheiro: usersToPools.artilheiro,
+      craque: usersToPools.craque,
     })
     .from(users)
     .innerJoin(usersToPools, eq(users.id, usersToPools.userId))
@@ -44,6 +78,14 @@ export default async function RankingPage() {
     );
 
   type LeaderboardPlayer = typeof leaderboard[number];
+
+  const getBonusPoints = (player: LeaderboardPlayer) => {
+    let pts = 0;
+    if (player.campeao && normalizeChampion(player.campeao) === "Espanha") pts += 10;
+    if (player.artilheiro && normalizePlayer(player.artilheiro) === "Kylian Mbappé") pts += 7;
+    if (player.craque && normalizePlayer(player.craque) === "Rodri") pts += 7;
+    return pts;
+  };
 
   return (
     <>
@@ -73,6 +115,7 @@ export default async function RankingPage() {
                   <th className="p-4 sm:p-6 w-12 sm:w-16 text-center text-stadium-green-600 hidden md:table-cell">CP</th>
                   <th className="p-4 sm:p-6 w-12 sm:w-16 text-center text-stadium-green-600 hidden md:table-cell">AG</th>
                   <th className="p-4 sm:p-6 w-12 sm:w-16 text-center text-stadium-green-600 hidden md:table-cell">AP</th>
+                  <th className="p-4 sm:p-6 w-12 sm:w-16 text-center text-stadium-green-600 hidden md:table-cell">PE</th>
                   <th className="p-4 sm:p-6 w-12 sm:w-16 text-center text-amber-500 hidden md:table-cell">CA</th>
                 </tr>
               </thead>
@@ -102,6 +145,7 @@ export default async function RankingPage() {
                         <span>CP: <strong className="text-gray-600">{player.CP}</strong></span>
                         <span>AG: <strong className="text-gray-600">{player.AG}</strong></span>
                         <span>AP: <strong className="text-gray-600">{player.AP}</strong></span>
+                        <span>PE: <strong className="text-stadium-green-600">{getBonusPoints(player)}</strong></span>
                         <span>CA: <strong className="text-amber-500">{player.CA}</strong></span>
                       </div>
                     </td>
@@ -119,6 +163,9 @@ export default async function RankingPage() {
                     </td>
                     <td className="p-4 sm:p-6 text-center font-bold text-gray-500 tabular-nums hidden md:table-cell">
                       {player.AP}
+                    </td>
+                    <td className="p-4 sm:p-6 text-center font-bold text-stadium-green-700 tabular-nums hidden md:table-cell">
+                      {getBonusPoints(player)}
                     </td>
                     <td className="p-4 sm:p-6 text-center font-bold text-amber-500 tabular-nums hidden md:table-cell">
                       {player.CA}
@@ -155,6 +202,10 @@ export default async function RankingPage() {
               <div className="flex items-center gap-2">
                 <span className="w-5 h-5 border-2 border-stadium-green-600 text-stadium-green-800 rounded-md flex items-center justify-center text-[10px] font-black">AP</span>
                 <span>Acertos Playoffs</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-5 h-5 border-2 border-stadium-green-600 text-stadium-green-800 rounded-md flex items-center justify-center text-[10px] font-black">PE</span>
+                <span>Palpites Especiais (Bônus)</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-5 h-5 bg-amber-500 text-white rounded-md flex items-center justify-center text-[10px] font-black">CA</span>

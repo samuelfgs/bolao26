@@ -116,16 +116,21 @@ export default async function PalpitesUserPage({
     };
   });
 
-  const [poolMembership] = await db.select({
-    campeao: usersToPools.campeao,
-    artilheiro: usersToPools.artilheiro,
-    craque: usersToPools.craque,
-  }).from(usersToPools).where(
-    and(
-      eq(usersToPools.userId, targetUserId),
-      eq(usersToPools.poolId, poolId)
-    )
-  );
+  const bonusDeadline = new Date("2026-06-13T03:00:00Z");
+  const isBonusLocked = new Date() >= bonusDeadline;
+
+  const [poolMembership] = isBonusLocked
+    ? await db.select({
+        campeao: usersToPools.campeao,
+        artilheiro: usersToPools.artilheiro,
+        craque: usersToPools.craque,
+      }).from(usersToPools).where(
+        and(
+          eq(usersToPools.userId, targetUserId),
+          eq(usersToPools.poolId, poolId)
+        )
+      )
+    : [null];
 
   const [targetUser] = await db.select({ name: users.name, email: users.email, nickname: users.nickname }).from(users).where(eq(users.id, targetUserId));
   const targetUserName = targetUser?.nickname || (targetUser?.name || targetUser?.email.split('@')[0] || "").split(' ')[0];
@@ -157,7 +162,7 @@ export default async function PalpitesUserPage({
             craque: poolMembership?.craque || "",
           }}
           isReadOnly={true}
-          hideBonus={true}
+          hideBonus={!isBonusLocked}
           communityTrends={communityTrends}
         />
       </div>

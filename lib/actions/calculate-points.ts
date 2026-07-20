@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { matches, guesses, usersToPools, users } from "@/lib/db/schema";
+import { matches, guesses, usersToPools, users, apiCache } from "@/lib/db/schema";
 import { eq, and, inArray, type InferSelectModel } from "drizzle-orm";
 
 type Match = InferSelectModel<typeof matches>;
@@ -19,12 +19,50 @@ type UserScore = {
   acertosFase2: number;
 };
 
+function normalizeChampion(val: string | null) {
+  if (!val) return "";
+  const normalized = val.trim().toLowerCase();
+  if (normalized.includes("brasil")) return "Brasil";
+  if (normalized.includes("espanha")) return "Espanha";
+  if (normalized.includes("fran")) return "França";
+  if (normalized.includes("portugal")) return "Portugal";
+  if (normalized.includes("alemanha")) return "Alemanha";
+  if (normalized.includes("inglaterra")) return "Inglaterra";
+  return val;
+}
+
+function normalizePlayer(val: string | null) {
+  if (!val) return "";
+  const normalized = val.trim().toLowerCase();
+  if (normalized.includes("mbap") || normalized.includes("mpab")) return "Kylian Mbappé";
+  if (normalized.includes("kane")) return "Harry Kane";
+  if (normalized.includes("ney")) return "Neymar";
+  if (normalized.includes("messi")) return "Lionel Messi";
+  if (normalized.includes("yamal")) return "Lamine Yamal";
+  if (normalized.includes("oyarzabal")) return "Mikel Oyarzabal";
+  if (normalized.includes("dembe")) return "Ousmane Dembélé";
+  if (normalized.includes("alvarez")) return "Julián Álvarez";
+  if (normalized.includes("ronaldo") || normalized.includes("cr7")) return "Cristiano Ronaldo";
+  if (normalized.includes("olise")) return "Michael Olise";
+  if (normalized.includes("vitinha")) return "Vitinha";
+  if (normalized.includes("endrick")) return "Endrick";
+  if (normalized.includes("rodri")) return "Rodri";
+  return val;
+}
+
 export async function calculatePoints() {
   console.log("Starting point calculation...");
+
+  // Load ESPN cache to determine shootout winners for playoff draw matches
+  const [espnEntry] = await db.select().from(apiCache).where(eq(apiCache.key, "espn-data-matches"));
+  const espnEvents = espnEntry?.data ? (espnEntry.data as any).events || [] : [];
 
   const allUsersInPools = await db.select({
     userId: usersToPools.userId,
     poolId: usersToPools.poolId,
+    campeao: usersToPools.campeao,
+    artilheiro: usersToPools.artilheiro,
+    craque: usersToPools.craque,
   }).from(usersToPools);
 
   const finishedMatches = await db.select().from(matches).where(inArray(matches.status, ["finished", "live"]));
@@ -41,11 +79,23 @@ export async function calculatePoints() {
 
   for (const userInPool of allUsersInPools) {
     const key = `${userInPool.userId}-${userInPool.poolId}`;
+    
+    let bonusPoints = 0;
+    if (userInPool.campeao && normalizeChampion(userInPool.campeao) === "Espanha") {
+      bonusPoints += 10;
+    }
+    if (userInPool.artilheiro && normalizePlayer(userInPool.artilheiro) === "Kylian Mbappé") {
+      bonusPoints += 7;
+    }
+    if (userInPool.craque && normalizePlayer(userInPool.craque) === "Rodri") {
+      bonusPoints += 7;
+    }
+
     if (!scores[key]) {
       scores[key] = {
         userId: userInPool.userId,
         poolId: userInPool.poolId,
-        totalPoints: 0,
+        totalPoints: bonusPoints,
         totalCravadas: 0,
         totalAcertos: 0,
         cravadasFase1: 0,
@@ -68,11 +118,37 @@ export async function calculatePoints() {
       if (!scores[key]) continue;
 
       const exactScore = guess.homeGuess === match.homeScore && guess.awayGuess === match.awayScore;
-      const guessWinner = guess.homeGuess > guess.awayGuess ? "home" : guess.homeGuess < guess.awayGuess ? "away" : "draw";
-      const matchWinner = match.homeScore > match.awayScore ? "home" : match.homeScore < match.awayScore ? "away" : "draw";
-      const correctWinner = guessWinner === matchWinner;
-
       const isGroupStage = match.stage === "group";
+
+      let correctWinner = false;
+      if (isGroupStage) {
+        const guessWinner = guess.homeGuess > guess.awayGuess ? "home" : guess.homeGuess < guess.awayGuess ? "away" : "draw";
+        const matchWinner = match.homeScore > match.awayScore ? "home" : match.homeScore < match.awayScore ? "away" : "draw";
+        correctWinner = guessWinner === matchWinner;
+      } else {
+        const event = espnEvents.find((e: any) => parseInt(e.id) === match.apiId);
+        if (event) {
+          const comp = event.competitions[0];
+          const homeComp = comp.competitors.find((c: any) => c.homeAway === 'home');
+          const awayComp = comp.competitors.find((c: any) => c.homeAway === 'away');
+          
+          const homeAdvanced = homeComp?.winner === true || homeComp?.advance === true;
+          const awayAdvanced = awayComp?.winner === true || awayComp?.advance === true;
+          
+          const advancedTeam = homeAdvanced ? "home" : (awayAdvanced ? "away" : "draw");
+          const guessWinner = guess.homeGuess > guess.awayGuess ? "home" : guess.homeGuess < guess.awayGuess ? "away" : "draw";
+          
+          if (guessWinner === "draw") {
+            correctWinner = match.homeScore === match.awayScore;
+          } else {
+            correctWinner = advancedTeam === guessWinner;
+          }
+        } else {
+          const guessWinner = guess.homeGuess > guess.awayGuess ? "home" : guess.homeGuess < guess.awayGuess ? "away" : "draw";
+          const matchWinner = match.homeScore > match.awayScore ? "home" : match.homeScore < match.awayScore ? "away" : "draw";
+          correctWinner = guessWinner === matchWinner;
+        }
+      }
 
       let points = 0;
       if (exactScore) {
@@ -96,6 +172,9 @@ export async function calculatePoints() {
       }
       
       scores[key].totalPoints += points;
+      if (guess.points !== points) {
+        await db.update(guesses).set({ points }).where(eq(guesses.id, guess.id));
+      }
     }
   }
 

@@ -4,6 +4,36 @@ import { useState, useEffect } from "react";
 import { MatchCard } from "@/components/MatchCard";
 import { saveAllGuesses } from "@/lib/actions/pool";
 import { toast } from "sonner";
+function normalizeChampion(val: string | null) {
+  if (!val) return "";
+  const normalized = val.trim().toLowerCase();
+  if (normalized.includes("brasil")) return "Brasil";
+  if (normalized.includes("espanha")) return "Espanha";
+  if (normalized.includes("fran")) return "França";
+  if (normalized.includes("portugal")) return "Portugal";
+  if (normalized.includes("alemanha")) return "Alemanha";
+  if (normalized.includes("inglaterra")) return "Inglaterra";
+  return val;
+}
+
+function normalizePlayer(val: string | null) {
+  if (!val) return "";
+  const normalized = val.trim().toLowerCase();
+  if (normalized.includes("mbap") || normalized.includes("mpab")) return "Kylian Mbappé";
+  if (normalized.includes("kane")) return "Harry Kane";
+  if (normalized.includes("ney")) return "Neymar";
+  if (normalized.includes("messi")) return "Lionel Messi";
+  if (normalized.includes("yamal")) return "Lamine Yamal";
+  if (normalized.includes("oyarzabal")) return "Mikel Oyarzabal";
+  if (normalized.includes("dembe")) return "Ousmane Dembélé";
+  if (normalized.includes("alvarez")) return "Julián Álvarez";
+  if (normalized.includes("ronaldo") || normalized.includes("cr7")) return "Cristiano Ronaldo";
+  if (normalized.includes("olise")) return "Michael Olise";
+  if (normalized.includes("vitinha")) return "Vitinha";
+  if (normalized.includes("endrick")) return "Endrick";
+  if (normalized.includes("rodri")) return "Rodri";
+  return val;
+}
 
 interface Guess {
   matchId: string;
@@ -183,6 +213,11 @@ export function PalpitesList({
                 onChange={(e) => handleBonusChange("campeao", e.target.value)}
                 className="w-full border-2 border-gray-100 p-4 rounded-2xl text-sm font-black text-stadium-green-900 focus:border-stadium-green-500 focus:outline-hidden transition-all uppercase placeholder:normal-case placeholder:font-medium placeholder:text-gray-300 disabled:bg-gray-50 disabled:text-gray-400"
               />
+              {isBonusLocked && bonus.campeao && (
+                <div className={`text-xs font-black mt-1 ml-1 ${normalizeChampion(bonus.campeao) === "Espanha" ? "text-green-600" : "text-red-500"}`}>
+                  {normalizeChampion(bonus.campeao) === "Espanha" ? "+10 pontos" : "0 pontos"}
+                </div>
+              )}
             </div>
             <div className="space-y-2">
               <label className="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-500 ml-1">
@@ -197,6 +232,11 @@ export function PalpitesList({
                 onChange={(e) => handleBonusChange("artilheiro", e.target.value)}
                 className="w-full border-2 border-gray-100 p-4 rounded-2xl text-sm font-black text-stadium-green-900 focus:border-stadium-green-500 focus:outline-hidden transition-all uppercase placeholder:normal-case placeholder:font-medium placeholder:text-gray-300 disabled:bg-gray-50 disabled:text-gray-400"
               />
+              {isBonusLocked && bonus.artilheiro && (
+                <div className={`text-xs font-black mt-1 ml-1 ${normalizePlayer(bonus.artilheiro) === "Kylian Mbappé" ? "text-green-600" : "text-red-500"}`}>
+                  {normalizePlayer(bonus.artilheiro) === "Kylian Mbappé" ? "+7 pontos" : "0 pontos"}
+                </div>
+              )}
             </div>
             <div className="space-y-2">
               <label className="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-500 ml-1">
@@ -212,6 +252,11 @@ export function PalpitesList({
                 onChange={(e) => handleBonusChange("craque", e.target.value)}
                 className="w-full border-2 border-gray-100 p-4 rounded-2xl text-sm font-black text-stadium-green-900 focus:border-stadium-green-500 focus:outline-hidden transition-all uppercase placeholder:normal-case placeholder:font-medium placeholder:text-gray-300 disabled:bg-gray-50 disabled:text-gray-400"
               />
+              {isBonusLocked && bonus.craque && (
+                <div className={`text-xs font-black mt-1 ml-1 ${normalizePlayer(bonus.craque) === "Rodri" ? "text-green-600" : "text-red-500"}`}>
+                  {normalizePlayer(bonus.craque) === "Rodri" ? "+7 pontos" : "0 pontos"}
+                </div>
+              )}
             </div>
           </div>
         </div>
